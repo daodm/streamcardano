@@ -62,7 +62,7 @@ type alias Flags =
 {-| Secret values are passed into Elm with flags on initialization and the `getStatus` command is sent that tells the Elm run-time to perform a GET request upon initialization.
 -}
 init : Flags -> ( Model, Cmd Msg )
-init flags =  
+init flags =
     let
         credentials =
             Api.credentials flags

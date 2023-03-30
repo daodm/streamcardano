@@ -7,8 +7,6 @@ module StreamCardano.Api exposing
 {-| Helpers for sending Http requests to the StreamCardano endpoints.
 
 
-# Credentials
-
 @docs Credentials, credentials
 
 
@@ -29,11 +27,12 @@ import StreamCardano.Data.Query as Query exposing (Query)
 import StreamCardano.Data.Status as Status exposing (Status)
 import StreamCardano.Endpoint as Endpoint
 
-
+{-| StreamCardano API credentials -}
 type Credentials
     = Credentials { url : String, key : String }
 
 
+{-| Init credentials -}
 credentials : { r | host : String, key : String } -> Credentials
 credentials { host, key } =
     Credentials

@@ -1,20 +1,32 @@
--- ~\~ language=Elm filename=src/Data/LastBlock.elm
-module StreamCardano.Data.LastBlock exposing (LastBlock, decoder, encode)
+module StreamCardano.Data.LastBlock exposing
+    ( LastBlock
+    , decoder, encode
+    )
+
 {-| Using this module, you are able to decode Last Block data into an Elm record and encode Last Block record into JSON values.
 
+
 # Definition
+
 @docs LastBlock
 
+
 # Decoders
+
 @docs decoder
 
-# Encode
+
+# Encode record
+
 @docs encode
 
 -}
-import Json.Decode          as D
+
+import Json.Decode as D
 import Json.Decode.Pipeline as Pipeline
-import Json.Encode          as E
+import Json.Encode as E
+
+
 {-| Representation of a Last Block record from StreamCardano API.
 -}
 type alias LastBlock =
@@ -22,29 +34,36 @@ type alias LastBlock =
     , result : Int
     }
 
+
 type alias Error =
     { message : String
     }
+
+
 {-| Decoder to decode Last Block data from StreamCardano Api into a Last Block record.
 -}
 decoder : D.Decoder LastBlock
 decoder =
     D.succeed LastBlock
         |> Pipeline.required "errors" (D.list errorDecoder)
-        |> Pipeline.required "result"  D.int
+        |> Pipeline.required "result" D.int
+
 
 errorDecoder : D.Decoder Error
 errorDecoder =
     D.succeed Error
         |> Pipeline.required "message" D.string
+
+
 {-| Encode Last Block record into JSON values.
 -}
 encode : LastBlock -> E.Value
 encode block =
     E.object
         [ ( "errors", E.list encodeError block.errors )
-        , ( "result", E.int              block.result )
+        , ( "result", E.int block.result )
         ]
+
 
 encodeError : Error -> E.Value
 encodeError error =

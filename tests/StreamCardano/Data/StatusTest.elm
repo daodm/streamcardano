@@ -1,14 +1,12 @@
--- ~\~ language=Elm filename=tests/Data/StatusTest.elm
+module StreamCardano.Data.StatusTest exposing (decoderTest)
 
-module StreamCardano.Data.StatusTest exposing (..)
-
-import StreamCardano.Data.Status exposing (..)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Json.Decode exposing (decodeString)
+import StreamCardano.Data.Status exposing (..)
 import Test exposing (..)
-
 import Time
+
 
 decoderTest : Test
 decoderTest =
@@ -18,6 +16,7 @@ decoderTest =
                 |> decodeString decoder
                 |> Expect.equal (Ok sample)
         )
+
 
 sample : Status
 sample =
@@ -60,6 +59,7 @@ sample =
         , syncBehindBy = "string"
         }
     }
+
 
 sampleJSON : String
 sampleJSON =

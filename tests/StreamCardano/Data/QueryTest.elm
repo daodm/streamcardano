@@ -1,12 +1,11 @@
--- ~\~ language=Elm filename=tests/Data/QueryTest.elm
+module StreamCardano.Data.QueryTest exposing (decoderTest)
 
-module StreamCardano.Data.QueryTest exposing (..)
-
-import StreamCardano.Data.Query exposing (..)
 import Expect
 import Json.Decode exposing (decodeString)
-import Test exposing (..)
 import Json.Encode as E
+import StreamCardano.Data.Query exposing (..)
+import Test exposing (..)
+
 
 decoderTest : Test
 decoderTest =
@@ -17,56 +16,61 @@ decoderTest =
                 |> Expect.equal (Ok sample)
         )
 
+
 sample : Query
 sample =
     { errors = [ "string" ]
     , result =
-        [ ResultBlockNo   blockNo
-        , ResultBlockId   blockId
+        [ ResultBlockNo blockNo
+        , ResultBlockId blockId
         , ResultArbitrary arbitrary
         ]
     }
 
+
 blockNo : BlockNo
 blockNo =
-    { blockNo       = 9223372036854775616
-    , epochNo       = 9223372036854775616
-    , epochSlotNo   = 9223372036854775616
-    , hash          = "string"
-    , id            = 9223372036854775616
-    , opCert        = "string"
+    { blockNo = 9223372036854775616
+    , epochNo = 9223372036854775616
+    , epochSlotNo = 9223372036854775616
+    , hash = "string"
+    , id = 9223372036854775616
+    , opCert = "string"
     , opCertCounter = 9223372036854775616
-    , previousId    = 9223372036854775616
-    , protoMajor    = 9223372036854775616
-    , protoMinor    = 9223372036854775616
-    , size          = 9223372036854775616
-    , slotLeaderId  = 9223372036854775616
-    , slotNo        = 9223372036854775616
-    , time          = "string"
-    , txCount       = 9223372036854775616
-    , vrfKey        = "string"
+    , previousId = 9223372036854775616
+    , protoMajor = 9223372036854775616
+    , protoMinor = 9223372036854775616
+    , size = 9223372036854775616
+    , slotLeaderId = 9223372036854775616
+    , slotNo = 9223372036854775616
+    , time = "string"
+    , txCount = 9223372036854775616
+    , vrfKey = "string"
     }
+
 
 blockId : BlockId
 blockId =
-    { blockId          = 9223372036854775616
-    , blockIndex       = 9223372036854775616
-    , deposit          = 9223372036854775616
-    , fee              = 9223372036854775616
-    , hash             = "string"
-    , id               = 9223372036854775616
-    , invalidBefore    = 9223372036854775616
+    { blockId = 9223372036854775616
+    , blockIndex = 9223372036854775616
+    , deposit = 9223372036854775616
+    , fee = 9223372036854775616
+    , hash = "string"
+    , id = 9223372036854775616
+    , invalidBefore = 9223372036854775616
     , invalidHereafter = 9223372036854775616
-    , outSum           = 9223372036854775616
-    , scriptSize       = 9223372036854775616
-    , size             = 9223372036854775616
-    , validContract    = True
+    , outSum = 9223372036854775616
+    , scriptSize = 9223372036854775616
+    , size = 9223372036854775616
+    , validContract = True
     }
+
 
 arbitrary : E.Value
 arbitrary =
     E.object
         [ ( "description", E.string "arbitrary" ) ]
+
 
 sampleJSON : String
 sampleJSON =
