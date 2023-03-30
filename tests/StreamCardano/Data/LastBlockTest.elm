@@ -1,11 +1,10 @@
--- ~\~ language=Elm filename=tests/Data/LastBlockTest.elm
+module StreamCardano.Data.LastBlockTest exposing (decoderTest)
 
-module StreamCardano.Data.LastBlockTest exposing (..)
-
+import Expect
+import Json.Decode exposing (decodeString)
 import StreamCardano.Data.LastBlock exposing (..)
-import Expect 
-import Json.Decode    exposing (decodeString)
-import Test           exposing (..)
+import Test exposing (..)
+
 
 decoderTest : Test
 decoderTest =
@@ -16,15 +15,17 @@ decoderTest =
                 |> Expect.equal (Ok sample)
         )
 
+
 sample : LastBlock
 sample =
     { errors = [ { message = "string" } ]
     , result = 98064369
     }
 
+
 sampleJSON : String
 sampleJSON =
-   """
+    """
 {
   "errors": [
     {

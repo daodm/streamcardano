@@ -1,21 +1,19 @@
 -- ~\~ language=Elm filename=src/StreamCardano/Endpoint.elm
-module StreamCardano.Endpoint exposing (..)
 
-type Endpoint
-    = Endpoint { host : String, key : String }
 
-host : String
-host =
-    "https://beta.streamcardano.dev/api/v1/"
+module StreamCardano.Endpoint exposing (lastBlock, runQuery, status)
+
 
 status : String
 status =
-    host ++ "status"
+    "status"
+
 
 lastBlock : String
 lastBlock =
-    host ++ "last/block"
+    "last/block"
+
 
 runQuery : String
 runQuery =
-    host ++ "query"
+    "query"

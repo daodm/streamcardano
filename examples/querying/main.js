@@ -4,7 +4,7 @@ import styles from "./src/main.css";
 
 const key = import.meta.env.VITE_STREAMCARDANO_KEY;
 const host = import.meta.env.VITE_STREAMCARDANO_HOST;
-const flags = { streamcardanoKey: key, streamcardanoHost: host };
+const flags = { host: host, key: key };
 
 let app = Elm.Main.init({ flags: flags });
 import { setupPorts } from "./src/ports";
