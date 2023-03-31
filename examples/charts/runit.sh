@@ -10,7 +10,7 @@ yes | npx elm install elm/http
 yes | npx elm install elm/json
 yes | npx elm install krisajenkins/remotedata
 yarn add @microsoft/fetch-event-source
-npm install modern-normalize
+yarn add @carbon/styles
 yes | npx elm install elm/json
 yes | npx elm install NoRedInk/elm-json-decode-pipeline
 npm i -D elm-test 

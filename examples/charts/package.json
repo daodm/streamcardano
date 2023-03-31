@@ -14,7 +14,10 @@
     "vite-plugin-elm": "^2.7.2"
   },
   "dependencies": {
+    "@carbon/styles": "^1.26.0",
     "@microsoft/fetch-event-source": "^2.0.1",
-    "modern-normalize": "^1.1.0"
+    "carbon-components": "^10.58.3",
+    "modern-normalize": "^1.1.0",
+    "sass": "^1.60.0"
   }
 }

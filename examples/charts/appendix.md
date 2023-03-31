@@ -6,8 +6,8 @@
 
 # Default styles
 
-```{.css file=src/main.css}
-
+```{.css file=src/main.scss}
+@use '@carbon/styles';
 ```
 
 # Ports

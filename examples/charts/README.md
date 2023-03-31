@@ -61,7 +61,7 @@ yes | npx elm install elm/http
 yes | npx elm install elm/json
 yes | npx elm install krisajenkins/remotedata
 yarn add @microsoft/fetch-event-source
-npm install modern-normalize
+yarn add @carbon/styles
 yes | npx elm install elm/json
 yes | npx elm install NoRedInk/elm-json-decode-pipeline
 npm i -D elm-test 
@@ -82,7 +82,7 @@ In the src directory, we'll create a file called main.js. Provide the host and k
 
 ```{.js file=main.js}
 import { Elm } from "./src/Main.elm";
-import styles from "./src/main.css";
+import styles from "./src/main.scss";
 import { setupPorts } from "./src/ports";
 
 const key = import.meta.env.VITE_STREAMCARDANO_KEY;

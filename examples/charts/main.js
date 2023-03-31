@@ -1,7 +1,7 @@
 /* ~\~ language=JavaScript filename=main.js */
 /* ~\~ begin <<README.md|main.js>>[init] */
 import { Elm } from "./src/Main.elm";
-import styles from "./src/main.css";
+import styles from "./src/main.scss";
 import { setupPorts } from "./src/ports";
 
 const key = import.meta.env.VITE_STREAMCARDANO_KEY;
