@@ -3,11 +3,50 @@
 ```{.sh file=runit.sh}
 <<runit>>
 ```
+# 
+```{.html file=index.html}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StreamCardano Charts</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
+```
 
 # Default styles
 
 ```{.css file=src/main.scss}
-@use '@carbon/styles';
+@use '@carbon/styles/scss/reset';
+@use '@carbon/styles/scss/type';
+@use '@carbon/styles/scss/themes';
+@use '@carbon/styles/scss/theme' with (
+  $theme: themes.$g10
+);
+@use '@carbon/styles/scss/components/menu-button';
+@use '@carbon/styles/scss/components/menu';
+@use '@carbon/styles/scss/components/ui-shell';
+@use '@carbon/styles/scss/components/notification';
+// @use '@carbon/styles';
+@use '@carbon/styles/scss/grid';
+
+// Emit the flex-grid styles
+@include grid.flex-grid();
+
+.container {
+    margin-left: 0;
+    margin-top: 4rem;
+    min-height: calc(100vh - 48px);
+    position: relative;
+    transition: .25s ease;
+    width: 100%;
+}
 ```
 
 # Ports
@@ -63,3 +102,4 @@ export function setupPorts(app, sseEndpoint, key) {
     <<portsLitenNewBlocks>>
 }
 ```
+

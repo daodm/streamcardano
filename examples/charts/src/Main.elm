@@ -1,5 +1,7 @@
 -- ~\~ language=Elm filename=src/Main.elm
 -- ~\~ begin <<README.md|src/Main.elm>>[init]
+
+
 port module Main exposing (main)
 
 {-| This Main module provides an example of how the [StreamCardano API](https://docs-beta.streamcardano.dev/) can be called and processed.
@@ -160,23 +162,19 @@ view : Model -> Document Msg
 view model =
     { title = "StreamCardano"
     , body =
-        [ div [ id "main" ]
-            [ viewNav model
-            , viewResponses model
-            ]
+        [ viewNav model
+        , viewMain model
         ]
     }
 
 
 viewNav : Model -> Html Msg
 viewNav model =
-    header [ id "navbar" ]
-        [ div [ class "topbar" ]
-            [ h2 [] [ text "StreamCardano" ]
-            , nav [ class "navbar-buttons" ]
-                [ viewGetLastBlockButton
-                , viewListenNewBlockButton
-                ]
+    header [ class "cds--header" ]
+        [ a [ class "cds--header__name" ] [ text "Stream Cardano Charts" ]
+        , nav [ class "cds--header__menu-bar" ]
+            [ viewGetLastBlockButton
+            , viewListenNewBlockButton
             ]
         , viewRunQueryForm model.query
         ]
@@ -184,12 +182,12 @@ viewNav model =
 
 viewGetLastBlockButton : Html Msg
 viewGetLastBlockButton =
-    button [ onClick GetLastBlock ] [ text "Get Last Block" ]
+    a [ class "cds--header__menu-item", onClick GetLastBlock ] [ text "Get Last Block" ]
 
 
 viewListenNewBlockButton : Html Msg
 viewListenNewBlockButton =
-    button [ onClick ListenNewBlocks ] [ text "Listen to New Blocks" ]
+    a [ class "cds--header__menu-item", onClick ListenNewBlocks ] [ text "Listen to New Blocks" ]
 
 
 viewRunQueryForm : String -> Html Msg
@@ -200,13 +198,25 @@ viewRunQueryForm query =
         ]
 
 
+viewMain : Model -> Html Msg
+viewMain model =
+    main_ [ class "container" ]
+        [ div [ class "cds--grid" ]
+            [ div [ class "cds--row" ]
+                [ div [ class "cds--col-sm-3" ] [ div [ class "outside" ] [ text "3/4" ] ]
+                , div [ class "cds--col-sm-1" ] [ div [ class "outside" ] [ viewStatus model.status ] ]
+                ]
+            ]
+        , viewResponses model
+        ]
+
+
 viewResponses : Model -> Html msg
 viewResponses model =
-    div [ class "response" ]
+    div [ class "cds--grid" ]
         [ viewListenNewBlocks model.newBlocks
         , viewLastBlock model.lastBlock
         , viewPostedQuery model.sqlQuery
-        , viewStatus model.status
         ]
 
 
@@ -247,15 +257,27 @@ viewPostedQuery query =
 
 
 viewStatus : WebData Status -> Html msg
-viewStatus status =
-    viewRemoteData
-        { description = "Retrieve status information about the backend. Does not require authentication."
-        , path = Endpoint.status
-        , method = "GET"
-        , encode = Status.encode
-        , errorToString = httpErrorToString
-        }
-        status
+viewStatus rd =
+    case rd of
+        NotAsked ->
+            viewNotAsked
+
+        Loading ->
+            viewLoading
+
+        Failure err ->
+            viewLoading
+            -- errorToString err
+            --     |> viewError description path method
+
+        Success status ->
+            div [ class "cds--toast-notification cds--toast-notification--success", title "" ]
+                [ div [ class "cds--toast-notification_details" ]
+                    [ h3 [ class "cds--toast-notification__title" ] [ text "Connected to server" ]
+                    , p [ class "cds--toast-notification__subtitle" ] [ text <| "Network name: " ++ status.result.networkName ]
+                    , p [ class "cds--toast-notification__caption", title status.result.appVersionInfo.appCommit ] [ text <| "version: " ++ (String.left 10 <| status.result.appVersionInfo.appCommit) ++ "..." ]
+                    ]
+                ]
 
 
 viewRemoteData :
@@ -295,15 +317,21 @@ viewLoading =
 
 viewSuccess : String -> String -> String -> E.Value -> Html msg
 viewSuccess desc path method value =
-    div [ class "success" ]
-        [ p [] [ text desc ]
-        , span [ class "path" ]
-            [ strong [] [ text method ], text path ]
-        , p [] [ strong [] [ text "Response:" ] ]
-        , pre []
-            [ value
-                |> E.encode 4
-                |> text
+    div []
+        [ code []
+            [ p [] [ text desc ]
+            , span [ class "path" ]
+                [ strong [] [ text method ], text path ]
+            , p [] [ strong [] [ text "Response:" ] ]
+            , div [ class "cds--snippet" ]
+                [ code []
+                    [ pre []
+                        [ value
+                            |> E.encode 4
+                            |> text
+                        ]
+                    ]
+                ]
             ]
         ]
 
@@ -337,6 +365,7 @@ httpErrorToString error =
 
         Http.BadBody s ->
             "Bad Body." ++ s
+
 
 
 -- ~\~ end
