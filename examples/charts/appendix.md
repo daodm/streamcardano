@@ -23,29 +23,79 @@
 # Default styles
 
 ```{.css file=src/main.scss}
+@use '@carbon/styles/scss/components/ui-shell';
+@use '@carbon/styles/scss/components/menu';
+@use '@carbon/styles/scss/components/notification';
+@use '@carbon/styles/scss/components/tabs';
+@use '@carbon/styles/scss/grid';
+@use '@carbon/styles/scss/layer';
+
 @use '@carbon/styles/scss/reset';
 @use '@carbon/styles/scss/type';
-@use '@carbon/styles/scss/themes';
-@use '@carbon/styles/scss/theme' with (
-  $theme: themes.$g10
-);
-@use '@carbon/styles/scss/components/menu-button';
-@use '@carbon/styles/scss/components/menu';
-@use '@carbon/styles/scss/components/ui-shell';
-@use '@carbon/styles/scss/components/notification';
-// @use '@carbon/styles';
-@use '@carbon/styles/scss/grid';
+@use '@carbon/themes/scss/themes' as *;
+@use '@carbon/themes';
+
+:root {
+  @include themes.theme($g90);
+}
+
+[data-carbon-theme='g10'] {
+  @include themes.theme($g10);
+}
+
+[data-carbon-theme='g90'] {
+  @include themes.theme($g90);
+}
+
+[data-carbon-theme='g100'] {
+  @include themes.theme($g100);
+}
+
 
 // Emit the flex-grid styles
 @include grid.flex-grid();
 
-.container {
+.main{
     margin-left: 0;
-    margin-top: 4rem;
+    margin-top: 3rem;
     min-height: calc(100vh - 48px);
     position: relative;
     transition: .25s ease;
     width: 100%;
+
+    .header {
+        height: 20rem;
+        background-color: #000;
+        color: #fff;
+        height: 16rem;
+        width: 100%;
+        .title {
+            padding-top: 4rem;
+        }
+        .notification {
+            padding-top: 1rem;
+        }
+    }
+
+    .tabs {
+        /* background: var(--cds-layer-accent); */
+        background: #000;
+        padding-bottom: 1rem;
+
+        .cds--grid {
+            padding-right: 1rem;
+            padding-left: 1rem;
+        }
+
+        .cds--tabs__nav-item {
+        }
+        .cds--tabs__nav-item--selected {
+        }
+    }
+
+    .body {
+        padding-top: 2rem;
+    }
 }
 ```
 

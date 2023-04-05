@@ -176,7 +176,8 @@ viewNav model =
             [ viewGetLastBlockButton
             , viewListenNewBlockButton
             ]
-        , viewRunQueryForm model.query
+
+        -- , viewRunQueryForm model.query
         ]
 
 
@@ -200,14 +201,45 @@ viewRunQueryForm query =
 
 viewMain : Model -> Html Msg
 viewMain model =
-    main_ [ class "container" ]
-        [ div [ class "cds--grid" ]
-            [ div [ class "cds--row" ]
-                [ div [ class "cds--col-sm-3" ] [ div [ class "outside" ] [ text "3/4" ] ]
-                , div [ class "cds--col-sm-1" ] [ div [ class "outside" ] [ viewStatus model.status ] ]
+    main_ [ class "main" ]
+        [ div [ class "header" ]
+            [ div [ class "cds--grid" ]
+                [ div [ class "cds--row" ]
+                    [ div [ class "cds--col-sm-3" ]
+                        [ h1 [ class "title" ] [ text "UI Elements" ]
+                        , h4 [ class "description" ] [ text "Streamlines Cardano dApp Development" ]
+                        ]
+                    , div [ class "cds--col-sm-1" ]
+                        [ div [ class "notification" ] [ viewStatus model.status ] ]
+                    ]
                 ]
             ]
-        , viewResponses model
+        , div [ class "tabs" ]
+            [ div [ class "cds--grid" ]
+                [ div [ class "cds--row" ]
+                    [ div [ class "cds--col" ]
+                        [ div [ class "cds--tabs cds--tabs--contained" ]
+                            [ div [ class "cds--tabs--list" ]
+                                [ button [ id "tab-id-1", class "cds--tabs__nav-item cds--tabs__nav-link cds--tabs__nav-item--selected" ] [ text "Dashboard" ]
+                                , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Transactions Per Block" ]
+                                , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
+                                , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        , div [ class "body" ]
+            [ div [ class "cds--grid" ]
+                [ div [ class "cds--row" ]
+                    [ div [ class "cds--col" ]
+                        [ div [ class "outside" ]
+                            [ viewResponses model ]
+                        ]
+                    ]
+                ]
+            ]
         ]
 
 
@@ -263,13 +295,13 @@ viewStatus rd =
             viewNotAsked
 
         Loading ->
-            viewLoading
+            text ""
 
         Failure err ->
             viewLoading
-            -- errorToString err
-            --     |> viewError description path method
 
+        -- errorToString err
+        --     |> viewError description path method
         Success status ->
             div [ class "cds--toast-notification cds--toast-notification--success", title "" ]
                 [ div [ class "cds--toast-notification_details" ]

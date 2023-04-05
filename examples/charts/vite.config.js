@@ -6,6 +6,13 @@ import elmPlugin from 'vite-plugin-elm'
 console.log(elmPlugin.plugin())
 
 export default defineConfig({
-  plugins: [elmPlugin.plugin()]
+  plugins: [elmPlugin.plugin()],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        includePaths: ['node_modules'],
+      },
+    },
+  }
 })
 /* ~\~ end */
