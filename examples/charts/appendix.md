@@ -70,7 +70,7 @@
         height: 16rem;
         width: 100%;
         .title {
-            padding-top: 4rem;
+            padding-top: 8rem;
         }
         .notification {
             padding-top: 1rem;
@@ -80,7 +80,7 @@
     .tabs {
         /* background: var(--cds-layer-accent); */
         background: #000;
-        padding-bottom: 1rem;
+        padding-bottom: 2rem;
 
         .cds--grid {
             padding-right: 1rem;

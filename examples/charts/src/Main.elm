@@ -47,12 +47,33 @@ main =
 -}
 type alias Model =
     { credentials : Api.Credentials
+    , activeTab : Tab
     , query : String
     , status : WebData Status
     , lastBlock : WebData LastBlock
     , sqlQuery : WebData Query
     , newBlocks : RemoteData D.Error (List NewBlock)
     }
+
+
+type Tab
+    = Dashboard
+    | Query
+
+
+allTabs : List Tab
+allTabs =
+    [ Dashboard, Query ]
+
+
+tabToStr : Tab -> String
+tabToStr tab =
+    case tab of
+        Dashboard ->
+            "Dashboard"
+
+        Query ->
+            "Query"
 
 
 {-| StreamCardano host and key values are passed into Elm via Flags.
@@ -72,6 +93,7 @@ init flags =
             Api.credentials flags
     in
     ( { credentials = credentials
+      , activeTab = Dashboard
       , query = "SELECT tx_id, value FROM datum ORDER BY tx_id DESC LIMIT 1"
       , status = Loading
       , lastBlock = NotAsked
@@ -84,6 +106,8 @@ init flags =
 
 type Msg
     = GotStatus (Result Error Status)
+    | ChangedTab Tab
+      --
     | GetLastBlock
     | GotLastBlock (Result Error LastBlock)
     | ChangeQuery String
@@ -101,6 +125,9 @@ update msg model =
 
         GotStatus (Err err) ->
             ( { model | status = Failure err }, Cmd.none )
+
+        ChangedTab tab ->
+            ( { model | activeTab = tab }, Cmd.none )
 
         GetLastBlock ->
             ( { model | lastBlock = Loading }
@@ -170,14 +197,12 @@ view model =
 
 viewNav : Model -> Html Msg
 viewNav model =
-    header [ class "cds--header" ]
+    header [ class "cds--header", attribute "data-carbon-theme" "g100" ]
         [ a [ class "cds--header__name" ] [ text "Stream Cardano Charts" ]
         , nav [ class "cds--header__menu-bar" ]
             [ viewGetLastBlockButton
             , viewListenNewBlockButton
             ]
-
-        -- , viewRunQueryForm model.query
         ]
 
 
@@ -193,9 +218,16 @@ viewListenNewBlockButton =
 
 viewRunQueryForm : String -> Html Msg
 viewRunQueryForm query =
-    div [ class "run-query-form" ]
-        [ textarea [ onInput ChangeQuery, value query ] []
-        , button [ onClick RunQuery ] [ text "Run Query" ]
+    div [ class "cds--form" ]
+        [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
+            [ div [ class "cds--form-item" ]
+                [ div [ class "cds--text-area__label-wrapper" ]
+                    [ div [ class "cds--label" ] [ text "Query" ] ]
+                , div [ class "cds--text-area__wrapper" ]
+                    [ textarea [ class "cds--text-area", attribute "cols" "75", attribute "rows" "3", onInput ChangeQuery, value query ] [] ]
+                ]
+            , button [ class "cds--btn cds--btn--primary", onClick RunQuery ] [ text "Submit" ]
+            ]
         ]
 
 
@@ -209,7 +241,7 @@ viewMain model =
                         [ h1 [ class "title" ] [ text "UI Elements" ]
                         , h4 [ class "description" ] [ text "Streamlines Cardano dApp Development" ]
                         ]
-                    , div [ class "cds--col-sm-1" ]
+                    , div [ class "cds--col-sm-1", attribute "data-carbon-theme" "g90" ]
                         [ div [ class "notification" ] [ viewStatus model.status ] ]
                     ]
                 ]
@@ -218,13 +250,15 @@ viewMain model =
             [ div [ class "cds--grid" ]
                 [ div [ class "cds--row" ]
                     [ div [ class "cds--col" ]
-                        [ div [ class "cds--tabs cds--tabs--contained" ]
+                        [ div [ class "cds--tabs cds--tabs" ]
                             [ div [ class "cds--tabs--list" ]
-                                [ button [ id "tab-id-1", class "cds--tabs__nav-item cds--tabs__nav-link cds--tabs__nav-item--selected" ] [ text "Dashboard" ]
-                                , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Transactions Per Block" ]
-                                , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
-                                , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
-                                ]
+                                (List.map (viewTab ((==) model.activeTab)) allTabs)
+
+                            -- [ button [ class "cds--tabs__nav-item cds--tabs__nav-link cds--tabs__nav-item--selected" ] [ text "Dashboard" ]
+                            -- , viewTab False "Transactions Per Block"
+                            -- , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
+                            -- , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
+                            -- ]
                             ]
                         ]
                     ]
@@ -234,13 +268,26 @@ viewMain model =
             [ div [ class "cds--grid" ]
                 [ div [ class "cds--row" ]
                     [ div [ class "cds--col" ]
-                        [ div [ class "outside" ]
+                        [ viewRunQueryForm model.query
+                        , div [ class "outside" ]
                             [ viewResponses model ]
                         ]
                     ]
                 ]
             ]
         ]
+
+
+viewTab : (Tab -> Bool) -> Tab -> Html Msg
+viewTab isActive tab =
+    button
+        [ classList
+            [ ( "cds--tabs__nav-item cds--tabs__nav-link", True )
+            , ( "cds--tabs__nav-item--selected", isActive tab )
+            ]
+        , onClick (ChangedTab tab)
+        ]
+        [ text (tabToStr tab) ]
 
 
 viewResponses : Model -> Html msg
