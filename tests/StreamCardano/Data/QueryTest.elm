@@ -127,190 +127,46 @@ transactionsSampleJSON =
   "errors": [],
   "result": [
     {
-      "tx_id": 64418244,
-      "value": {
-        "constructor": 0,
-        "fields": [
-          {
-            "bytes": "71db50c7aa49754f63f9cb1e81935d6ef5618ae55d28f8a87cc33c35"
-          },
-          {
-            "list": [
-              {
-                "constructor": 0,
-                "fields": [
-                  {
-                    "constructor": 0,
-                    "fields": [
-                      {
-                        "constructor": 0,
-                        "fields": [
-                          {
-                            "bytes": "63e649a20be51104adc34f5f3042d7eca49d66561966a887f520c1ad"
-                          }
-                        ]
-                      },
-                      {
-                        "constructor": 0,
-                        "fields": [
-                          {
-                            "constructor": 0,
-                            "fields": [
-                              {
-                                "constructor": 0,
-                                "fields": [
-                                  {
-                                    "bytes": "e6e241c94acfd2e57b98bc25c1526fc1fb38fde44e3e07c88e94734f"
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "map": [
-                      {
-                        "k": { "bytes": "" },
-                        "v": {
-                          "constructor": 0,
-                          "fields": [
-                            { "int": 0 },
-                            {
-                              "map": [
-                                {
-                                  "k": { "bytes": "" },
-                                  "v": { "int": 10500000 }
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "constructor": 0,
-                "fields": [
-                  {
-                    "constructor": 0,
-                    "fields": [
-                      {
-                        "constructor": 0,
-                        "fields": [
-                          {
-                            "bytes": "70e60f3b5ea7153e0acc7a803e4401d44b8ed1bae1c7baaad1a62a72"
-                          }
-                        ]
-                      },
-                      {
-                        "constructor": 0,
-                        "fields": [
-                          {
-                            "constructor": 0,
-                            "fields": [
-                              {
-                                "constructor": 0,
-                                "fields": [
-                                  {
-                                    "bytes": "1e78aae7c90cc36d624f7b3bb6d86b52696dc84e490f343eba89005f"
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "map": [
-                      {
-                        "k": { "bytes": "" },
-                        "v": {
-                          "constructor": 0,
-                          "fields": [
-                            { "int": 0 },
-                            {
-                              "map": [
-                                {
-                                  "k": { "bytes": "" },
-                                  "v": { "int": 3000000 }
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "constructor": 0,
-                "fields": [
-                  {
-                    "constructor": 0,
-                    "fields": [
-                      {
-                        "constructor": 0,
-                        "fields": [
-                          {
-                            "bytes": "71db50c7aa49754f63f9cb1e81935d6ef5618ae55d28f8a87cc33c35"
-                          }
-                        ]
-                      },
-                      {
-                        "constructor": 0,
-                        "fields": [
-                          {
-                            "constructor": 0,
-                            "fields": [
-                              {
-                                "constructor": 0,
-                                "fields": [
-                                  {
-                                    "bytes": "536f517c3ebd6b092f217b096eccdb58f0514f3f4983c06bfa966953"
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "map": [
-                      {
-                        "k": { "bytes": "" },
-                        "v": {
-                          "constructor": 0,
-                          "fields": [
-                            { "int": 0 },
-                            {
-                              "map": [
-                                {
-                                  "k": { "bytes": "" },
-                                  "v": { "int": 136500000 }
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      }
+      "block_id": 8623519,
+      "block_index": 11,
+      "deposit": 0,
+      "fee": 194277,
+      "hash": "\\xbb74fdc5641760e474da29ca6482aa93bc98bdc74b6dba16c17b90b2a695f7ed",
+      "id": 64420165,
+      "invalid_before": 0,
+      "invalid_hereafter": 89430837,
+      "out_sum": 2610352148,
+      "script_size": 0,
+      "size": 884,
+      "valid_contract": true
+    },
+    {
+      "block_id": 8623519,
+      "block_index": 10,
+      "deposit": 0,
+      "fee": 516286,
+      "hash": "\\x5e833be733eaba89ad3497a84ac6449bc1d08f19eb4571d7fe77b05f6255b8fd",
+      "id": 64420164,
+      "invalid_before": null,
+      "invalid_hereafter": 89419446,
+      "out_sum": 42092683,
+      "script_size": 0,
+      "size": 1513,
+      "valid_contract": true
+    },
+    {
+      "block_id": 8623519,
+      "block_index": 9,
+      "deposit": 0,
+      "fee": 173201,
+      "hash": "\\xead712c7f15a0e0f11a822b6f3b3210fb5410dfd06da8c8c26ecf3fdbf1d9ad9",
+      "id": 64420163,
+      "invalid_before": 28693459,
+      "invalid_hereafter": 89425972,
+      "out_sum": 5796037338,
+      "script_size": 0,
+      "size": 371,
+      "valid_contract": true
     }
   ]
 }

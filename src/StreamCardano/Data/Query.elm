@@ -26,6 +26,7 @@ module StreamCardano.Data.Query exposing
 import Json.Decode as D
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode as E
+import StreamCardano.Data.Tx as Tx exposing (Tx)
 
 
 {-| Representation of a Query record from StreamCardano API.
@@ -39,6 +40,7 @@ type alias Query =
 type QueryResult
     = ResultBlockNo BlockNo
     | ResultBlockId BlockId
+    | ResultTx Tx
     | ResultArbitrary D.Value
 
 
@@ -92,6 +94,7 @@ queryResultItemDecoder =
     D.oneOf
         [ D.map ResultBlockNo <| queryResultObjectDecoder
         , D.map ResultBlockId <| queryResultMemberDecoder
+        , D.map ResultTx <| Tx.decoder
         , D.map ResultArbitrary <| queryResultEntityDecoder
         ]
 
@@ -157,6 +160,9 @@ encodedQueryResultItem queryResult =
 
         ResultBlockId value ->
             encodedBlockId value
+
+        ResultTx value ->
+            Tx.encode value
 
         ResultArbitrary value ->
             value
