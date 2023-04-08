@@ -18,7 +18,7 @@ import RemoteData exposing (RemoteData(..), WebData)
 import StreamCardano.Api as Api
 import StreamCardano.Data.LastBlock as LastBlock exposing (LastBlock)
 import StreamCardano.Data.NewBlock as NewBlock exposing (NewBlock)
-import StreamCardano.Data.Query as Query exposing (Query)
+import StreamCardano.Data.Query as Query exposing (BlockNo, Query)
 import StreamCardano.Data.Status as Status exposing (Status)
 import StreamCardano.Endpoint as Endpoint
 
@@ -53,6 +53,7 @@ type alias Model =
     , status : WebData Status
     , sqlQuery : WebData Query
     , transactions : WebData Transactions
+    , blocks : WebData (List Block)
 
     --
     , lastBlock : WebData LastBlock
@@ -64,15 +65,20 @@ type alias Transactions =
     Query
 
 
+type alias Block =
+    BlockNo
+
+
 type Tab
     = Dashboard
     | Query
     | Transactions
+    | Blocks
 
 
 allTabs : List Tab
 allTabs =
-    [ Dashboard, Query, Transactions ]
+    [ Dashboard, Query, Transactions, Blocks ]
 
 
 tabToStr : Tab -> String
@@ -86,6 +92,9 @@ tabToStr tab =
 
         Transactions ->
             "Transactions"
+
+        Blocks ->
+            "Blocks"
 
 
 {-| StreamCardano host and key values are passed into Elm via Flags.
@@ -105,21 +114,22 @@ init flags =
             Api.credentials flags
     in
     ( { credentials = credentials
-      , activeTab = Query --Dashboard
+      , activeTab = Blocks --Dashboard
       , query = "SELECT tx_id, value FROM datum ORDER BY tx_id DESC LIMIT 1"
       , isQueryDebugMode = False
       , status = Loading
       , sqlQuery = NotAsked
       , transactions = Loading
+      , blocks = Loading
 
       --
       , lastBlock = NotAsked
       , newBlocks = NotAsked
       }
     , --Api.getStatus GotStatus credentials
-      Api.postQuery GotTransactions
+      Api.postQuery GotBlocks
         credentials
-        "SELECT * FROM tx LIMIT 3"
+        "SELECT * FROM block LIMIT 10"
     )
 
 
@@ -128,6 +138,7 @@ type Msg
     | ChangedTab Tab
     | ToggledDebugMode
     | GotTransactions (Result Error Query)
+    | GotBlocks (Result Error Query)
       --
     | GetLastBlock
     | GotLastBlock (Result Error LastBlock)
@@ -158,6 +169,25 @@ update msg model =
 
         GotTransactions (Err err) ->
             ( { model | transactions = Failure err }, Cmd.none )
+
+        GotBlocks (Ok query) ->
+            let
+                blocks =
+                    query.result
+                        |> List.filterMap
+                            (\x ->
+                                case x of
+                                    Query.ResultBlockNo block ->
+                                        Just block
+
+                                    _ ->
+                                        Nothing
+                            )
+            in
+            ( { model | blocks = Success blocks }, Cmd.none )
+
+        GotBlocks (Err err) ->
+            ( { model | blocks = Failure err }, Cmd.none )
 
         GetLastBlock ->
             ( { model | lastBlock = Loading }
@@ -350,6 +380,9 @@ viewBody model =
         Transactions ->
             viewTransactions model.transactions
 
+        Blocks ->
+            viewBlocks model.blocks
+
 
 viewTransactions : WebData Transactions -> Html Msg
 viewTransactions wd =
@@ -368,6 +401,26 @@ viewTransactions wd =
         Success transactions ->
             div []
                 [ text "transactions" ]
+
+
+viewBlocks : WebData (List Block) -> Html Msg
+viewBlocks wd =
+    case Debug.log "wd: " wd of
+        NotAsked ->
+            viewNotAsked
+
+        Loading ->
+            text ""
+
+        Failure err ->
+            viewLoading
+
+        -- errorToString err
+        --     |> viewError description path method
+        Success blocks ->
+            blocks
+                |> List.map (\b -> span [] [ text b.hash ])
+                |> div []
 
 
 viewResponses : Model -> Html msg
