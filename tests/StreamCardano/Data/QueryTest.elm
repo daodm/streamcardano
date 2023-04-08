@@ -118,3 +118,200 @@ sampleJSON =
   ]
 }
 """
+
+
+transactionsSampleJSON : String
+transactionsSampleJSON =
+    """
+{
+  "errors": [],
+  "result": [
+    {
+      "tx_id": 64418244,
+      "value": {
+        "constructor": 0,
+        "fields": [
+          {
+            "bytes": "71db50c7aa49754f63f9cb1e81935d6ef5618ae55d28f8a87cc33c35"
+          },
+          {
+            "list": [
+              {
+                "constructor": 0,
+                "fields": [
+                  {
+                    "constructor": 0,
+                    "fields": [
+                      {
+                        "constructor": 0,
+                        "fields": [
+                          {
+                            "bytes": "63e649a20be51104adc34f5f3042d7eca49d66561966a887f520c1ad"
+                          }
+                        ]
+                      },
+                      {
+                        "constructor": 0,
+                        "fields": [
+                          {
+                            "constructor": 0,
+                            "fields": [
+                              {
+                                "constructor": 0,
+                                "fields": [
+                                  {
+                                    "bytes": "e6e241c94acfd2e57b98bc25c1526fc1fb38fde44e3e07c88e94734f"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "map": [
+                      {
+                        "k": { "bytes": "" },
+                        "v": {
+                          "constructor": 0,
+                          "fields": [
+                            { "int": 0 },
+                            {
+                              "map": [
+                                {
+                                  "k": { "bytes": "" },
+                                  "v": { "int": 10500000 }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "constructor": 0,
+                "fields": [
+                  {
+                    "constructor": 0,
+                    "fields": [
+                      {
+                        "constructor": 0,
+                        "fields": [
+                          {
+                            "bytes": "70e60f3b5ea7153e0acc7a803e4401d44b8ed1bae1c7baaad1a62a72"
+                          }
+                        ]
+                      },
+                      {
+                        "constructor": 0,
+                        "fields": [
+                          {
+                            "constructor": 0,
+                            "fields": [
+                              {
+                                "constructor": 0,
+                                "fields": [
+                                  {
+                                    "bytes": "1e78aae7c90cc36d624f7b3bb6d86b52696dc84e490f343eba89005f"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "map": [
+                      {
+                        "k": { "bytes": "" },
+                        "v": {
+                          "constructor": 0,
+                          "fields": [
+                            { "int": 0 },
+                            {
+                              "map": [
+                                {
+                                  "k": { "bytes": "" },
+                                  "v": { "int": 3000000 }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "constructor": 0,
+                "fields": [
+                  {
+                    "constructor": 0,
+                    "fields": [
+                      {
+                        "constructor": 0,
+                        "fields": [
+                          {
+                            "bytes": "71db50c7aa49754f63f9cb1e81935d6ef5618ae55d28f8a87cc33c35"
+                          }
+                        ]
+                      },
+                      {
+                        "constructor": 0,
+                        "fields": [
+                          {
+                            "constructor": 0,
+                            "fields": [
+                              {
+                                "constructor": 0,
+                                "fields": [
+                                  {
+                                    "bytes": "536f517c3ebd6b092f217b096eccdb58f0514f3f4983c06bfa966953"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "map": [
+                      {
+                        "k": { "bytes": "" },
+                        "v": {
+                          "constructor": 0,
+                          "fields": [
+                            { "int": 0 },
+                            {
+                              "map": [
+                                {
+                                  "k": { "bytes": "" },
+                                  "v": { "int": 136500000 }
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+"""

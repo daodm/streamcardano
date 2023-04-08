@@ -49,21 +49,30 @@ type alias Model =
     { credentials : Api.Credentials
     , activeTab : Tab
     , query : String
+    , isQueryDebugMode : Bool
     , status : WebData Status
-    , lastBlock : WebData LastBlock
     , sqlQuery : WebData Query
+    , transactions : WebData Transactions
+
+    --
+    , lastBlock : WebData LastBlock
     , newBlocks : RemoteData D.Error (List NewBlock)
     }
+
+
+type alias Transactions =
+    Query
 
 
 type Tab
     = Dashboard
     | Query
+    | Transactions
 
 
 allTabs : List Tab
 allTabs =
-    [ Dashboard, Query ]
+    [ Dashboard, Query, Transactions ]
 
 
 tabToStr : Tab -> String
@@ -74,6 +83,9 @@ tabToStr tab =
 
         Query ->
             "Query"
+
+        Transactions ->
+            "Transactions"
 
 
 {-| StreamCardano host and key values are passed into Elm via Flags.
@@ -93,20 +105,29 @@ init flags =
             Api.credentials flags
     in
     ( { credentials = credentials
-      , activeTab = Dashboard
+      , activeTab = Query --Dashboard
       , query = "SELECT tx_id, value FROM datum ORDER BY tx_id DESC LIMIT 1"
+      , isQueryDebugMode = False
       , status = Loading
-      , lastBlock = NotAsked
       , sqlQuery = NotAsked
+      , transactions = Loading
+
+      --
+      , lastBlock = NotAsked
       , newBlocks = NotAsked
       }
-    , Api.getStatus GotStatus credentials
+    , --Api.getStatus GotStatus credentials
+      Api.postQuery GotTransactions
+        credentials
+        "SELECT * FROM tx LIMIT 3"
     )
 
 
 type Msg
     = GotStatus (Result Error Status)
     | ChangedTab Tab
+    | ToggledDebugMode
+    | GotTransactions (Result Error Query)
       --
     | GetLastBlock
     | GotLastBlock (Result Error LastBlock)
@@ -129,6 +150,15 @@ update msg model =
         ChangedTab tab ->
             ( { model | activeTab = tab }, Cmd.none )
 
+        ToggledDebugMode ->
+            ( { model | isQueryDebugMode = not model.isQueryDebugMode }, Cmd.none )
+
+        GotTransactions (Ok query) ->
+            ( { model | transactions = Success query }, Cmd.none )
+
+        GotTransactions (Err err) ->
+            ( { model | transactions = Failure err }, Cmd.none )
+
         GetLastBlock ->
             ( { model | lastBlock = Loading }
             , Api.getLastBlock GotLastBlock
@@ -146,7 +176,8 @@ update msg model =
 
         RunQuery ->
             ( { model | sqlQuery = Loading }
-            , Api.postQuery PostedQuery
+            , postQuery model.isQueryDebugMode
+                PostedQuery
                 model.credentials
                 model.query
             )
@@ -173,6 +204,15 @@ update msg model =
 
         ListenNewBlocks ->
             ( { model | newBlocks = Loading }, listenNewBlocks () )
+
+
+postQuery : Bool -> (Result Error Query -> msg) -> Api.Credentials -> String -> Cmd msg
+postQuery isDebugMode =
+    if isDebugMode then
+        Api.postQuery
+
+    else
+        Api.postQueryDebug
 
 
 {-| Subscribe to the `newBlocksReceiver` port to listen streaming events
@@ -216,11 +256,24 @@ viewListenNewBlockButton =
     a [ class "cds--header__menu-item", onClick ListenNewBlocks ] [ text "Listen to New Blocks" ]
 
 
-viewRunQueryForm : String -> Html Msg
-viewRunQueryForm query =
+viewRunQueryForm : Bool -> String -> Html Msg
+viewRunQueryForm isDebugMode query =
     div [ class "cds--form" ]
         [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
             [ div [ class "cds--form-item" ]
+                [ div [ class "cds--toggle", onClick ToggledDebugMode ]
+                    [ div [ class "cds--toogle_label" ]
+                        [ span [ class "cds--toggle__label-text" ]
+                            [ text "Debug mode"
+                            ]
+                        , div [ class "cds--toggle__appearance" ]
+                            [ div [ classList [ ( "cds--toggle__switch", True ), ( "cds--toggle__switch--checked", isDebugMode ) ] ] []
+                            , div [ class "cds-toggle__text" ] []
+                            ]
+                        ]
+                    ]
+                ]
+            , div [ class "cds--form-item" ]
                 [ div [ class "cds--text-area__label-wrapper" ]
                     [ div [ class "cds--label" ] [ text "Query" ] ]
                 , div [ class "cds--text-area__wrapper" ]
@@ -253,12 +306,6 @@ viewMain model =
                         [ div [ class "cds--tabs cds--tabs" ]
                             [ div [ class "cds--tabs--list" ]
                                 (List.map (viewTab ((==) model.activeTab)) allTabs)
-
-                            -- [ button [ class "cds--tabs__nav-item cds--tabs__nav-link cds--tabs__nav-item--selected" ] [ text "Dashboard" ]
-                            -- , viewTab False "Transactions Per Block"
-                            -- , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
-                            -- , button [ class "cds--tabs__nav-item cds--tabs__nav-link" ] [ text "Status" ]
-                            -- ]
                             ]
                         ]
                     ]
@@ -268,9 +315,7 @@ viewMain model =
             [ div [ class "cds--grid" ]
                 [ div [ class "cds--row" ]
                     [ div [ class "cds--col" ]
-                        [ viewRunQueryForm model.query
-                        , div [ class "outside" ]
-                            [ viewResponses model ]
+                        [ viewBody model
                         ]
                     ]
                 ]
@@ -290,12 +335,46 @@ viewTab isActive tab =
         [ text (tabToStr tab) ]
 
 
+viewBody : Model -> Html Msg
+viewBody model =
+    case model.activeTab of
+        Dashboard ->
+            viewResponses model
+
+        Query ->
+            div []
+                [ viewRunQueryForm model.isQueryDebugMode model.query
+                , viewPostedQuery model.sqlQuery
+                ]
+
+        Transactions ->
+            viewTransactions model.transactions
+
+
+viewTransactions : WebData Transactions -> Html Msg
+viewTransactions wd =
+    case Debug.log "wd: " wd of
+        NotAsked ->
+            viewNotAsked
+
+        Loading ->
+            text ""
+
+        Failure err ->
+            viewLoading
+
+        -- errorToString err
+        --     |> viewError description path method
+        Success transactions ->
+            div []
+                [ text "transactions" ]
+
+
 viewResponses : Model -> Html msg
 viewResponses model =
     div [ class "cds--grid" ]
         [ viewListenNewBlocks model.newBlocks
         , viewLastBlock model.lastBlock
-        , viewPostedQuery model.sqlQuery
         ]
 
 

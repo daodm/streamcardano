@@ -23,10 +23,18 @@
 # Default styles
 
 ```{.css file=src/main.scss}
+@use '@carbon/styles/scss/config' with (
+    $css--body: true 
+);
 @use '@carbon/styles/scss/components/ui-shell';
 @use '@carbon/styles/scss/components/menu';
 @use '@carbon/styles/scss/components/notification';
 @use '@carbon/styles/scss/components/tabs';
+@use '@carbon/styles/scss/components/form';
+@use '@carbon/styles/scss/components/text-area';
+@use '@carbon/styles/scss/components/button';
+@use '@carbon/styles/scss/components/stack';
+@use '@carbon/styles/scss/components/toggle';
 @use '@carbon/styles/scss/grid';
 @use '@carbon/styles/scss/layer';
 
@@ -36,7 +44,7 @@
 @use '@carbon/themes';
 
 :root {
-  @include themes.theme($g90);
+  @include themes.theme($g10);
 }
 
 [data-carbon-theme='g10'] {
@@ -55,6 +63,9 @@
 // Emit the flex-grid styles
 @include grid.flex-grid();
 
+.cds--header {
+    border-bottom: 1px solid #393939;
+}
 .main{
     margin-left: 0;
     margin-top: 3rem;
@@ -64,30 +75,30 @@
     width: 100%;
 
     .header {
-        height: 20rem;
-        background-color: #000;
+        background: #000;
         color: #fff;
+        height: 20rem;
         height: 16rem;
         width: 100%;
         .title {
             padding-top: 8rem;
         }
         .notification {
-            padding-top: 1rem;
+            padding-top: 2rem;
         }
     }
 
     .tabs {
-        /* background: var(--cds-layer-accent); */
-        background: #000;
-        padding-bottom: 2rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
 
         .cds--grid {
             padding-right: 1rem;
             padding-left: 1rem;
         }
 
-        .cds--tabs__nav-item {
+        .cds--tabs__nav-item:focus {
+            outline:none;
         }
         .cds--tabs__nav-item--selected {
         }

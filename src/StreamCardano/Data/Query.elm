@@ -1,6 +1,7 @@
 module StreamCardano.Data.Query exposing
     ( Query, QueryResult(..), BlockNo, BlockId
-    , decoder, encode
+    , decoder
+    , encode
     )
 
 {-| Using this module, you are able to decode Query data into an Elm record and encode Query record into JSON values.
@@ -19,6 +20,7 @@ module StreamCardano.Data.Query exposing
 # Encode record
 
 @docs encode
+
 -}
 
 import Json.Decode as D
