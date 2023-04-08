@@ -36,7 +36,7 @@ type alias Tx =
     , fee : Int
     , hash : String
     , id : Int
-    , invalidBefore : Int
+    , invalidBefore : Maybe Int
     , invalidHereafter : Int
     , outSum : Int
     , scriptSize : Int
@@ -56,7 +56,7 @@ decoder =
                 (D.field "fee" D.int)
                 (D.field "hash" D.string)
                 (D.field "id" D.int)
-                (D.field "invalid_before" D.int)
+                (D.field "invalid_before" (D.nullable D.int))
                 (D.field "invalid_hereafter" D.int)
     in
     D.map5 (<|)
@@ -78,7 +78,11 @@ encode tx =
         , ( "fee", E.int tx.fee )
         , ( "hash", E.string tx.hash )
         , ( "id", E.int tx.id )
-        , ( "invalid_before", E.int tx.invalidBefore )
+        , ( "invalid_before"
+          , tx.invalidBefore
+                |> Maybe.map E.int
+                |> Maybe.withDefault E.null
+          )
         , ( "invalid_hereafter", E.int tx.invalidHereafter )
         , ( "out_sum", E.int tx.outSum )
         , ( "script_size", E.int tx.scriptSize )

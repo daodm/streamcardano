@@ -257,7 +257,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case msg of
+    case Debug.log "msg" msg of
         GotStatus (Ok status) ->
             ( { model | status = Success status }, Cmd.none )
 

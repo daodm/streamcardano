@@ -4,17 +4,24 @@ import Expect
 import Json.Decode exposing (decodeString)
 import Json.Encode as E
 import StreamCardano.Data.Query exposing (..)
+import StreamCardano.Data.Tx as Tx exposing (Tx)
 import Test exposing (..)
 
 
 decoderTest : Test
 decoderTest =
-    test "Decode the Status Response"
-        (\_ ->
-            sampleJSON
-                |> decodeString decoder
-                |> Expect.equal (Ok sample)
-        )
+    describe "Decode the Status Response"
+        [ test "sample json" <|
+            \_ ->
+                sampleJSON
+                    |> decodeString decoder
+                    |> Expect.equal (Ok sample)
+        , test "transactions json" <|
+            \_ ->
+                transactionsSampleJSON
+                    |> decodeString decoder
+                    |> Expect.equal (Ok sampleTxsSampleJSON)
+        ]
 
 
 sample : Query
@@ -22,7 +29,7 @@ sample =
     { errors = [ "string" ]
     , result =
         [ ResultBlockNo blockNo
-        , ResultBlockId blockId
+        , ResultTx sampleTx
         , ResultArbitrary arbitrary
         ]
     }
@@ -49,15 +56,15 @@ blockNo =
     }
 
 
-blockId : BlockId
-blockId =
+sampleTx : Tx
+sampleTx =
     { blockId = 9223372036854775616
     , blockIndex = 9223372036854775616
     , deposit = 9223372036854775616
     , fee = 9223372036854775616
     , hash = "string"
     , id = 9223372036854775616
-    , invalidBefore = 9223372036854775616
+    , invalidBefore = Just 9223372036854775616
     , invalidHereafter = 9223372036854775616
     , outSum = 9223372036854775616
     , scriptSize = 9223372036854775616
@@ -70,6 +77,31 @@ arbitrary : E.Value
 arbitrary =
     E.object
         [ ( "description", E.string "arbitrary" ) ]
+
+
+sampleTxsSampleJSON : Query
+sampleTxsSampleJSON =
+    { errors = []
+    , result =
+        [ ResultTx sampleTx2 ]
+    }
+
+
+sampleTx2 : Tx
+sampleTx2 =
+    { blockId = 8623519
+    , blockIndex = 9
+    , deposit = 0
+    , fee = 173201
+    , hash = "string"
+    , id = 64420163
+    , invalidBefore = Just 28693459
+    , invalidHereafter = 89425972
+    , outSum = 5796037338
+    , scriptSize = 0
+    , size = 371
+    , validContract = True
+    }
 
 
 sampleJSON : String
@@ -128,38 +160,10 @@ transactionsSampleJSON =
   "result": [
     {
       "block_id": 8623519,
-      "block_index": 11,
-      "deposit": 0,
-      "fee": 194277,
-      "hash": "\\xbb74fdc5641760e474da29ca6482aa93bc98bdc74b6dba16c17b90b2a695f7ed",
-      "id": 64420165,
-      "invalid_before": 0,
-      "invalid_hereafter": 89430837,
-      "out_sum": 2610352148,
-      "script_size": 0,
-      "size": 884,
-      "valid_contract": true
-    },
-    {
-      "block_id": 8623519,
-      "block_index": 10,
-      "deposit": 0,
-      "fee": 516286,
-      "hash": "\\x5e833be733eaba89ad3497a84ac6449bc1d08f19eb4571d7fe77b05f6255b8fd",
-      "id": 64420164,
-      "invalid_before": null,
-      "invalid_hereafter": 89419446,
-      "out_sum": 42092683,
-      "script_size": 0,
-      "size": 1513,
-      "valid_contract": true
-    },
-    {
-      "block_id": 8623519,
       "block_index": 9,
       "deposit": 0,
       "fee": 173201,
-      "hash": "\\xead712c7f15a0e0f11a822b6f3b3210fb5410dfd06da8c8c26ecf3fdbf1d9ad9",
+      "hash": "string",
       "id": 64420163,
       "invalid_before": 28693459,
       "invalid_hereafter": 89425972,
