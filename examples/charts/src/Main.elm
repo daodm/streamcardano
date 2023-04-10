@@ -151,7 +151,7 @@ type Msg
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case Debug.log "msg" msg of
+    case msg of
         GotStatus (Ok status) ->
             ( { model | status = Success status }, Cmd.none )
 
@@ -405,7 +405,7 @@ viewTransactions wd =
 
 viewBlocks : WebData (List Block) -> Html Msg
 viewBlocks wd =
-    case Debug.log "wd: " wd of
+    case wd of
         NotAsked ->
             viewNotAsked
 
@@ -418,9 +418,17 @@ viewBlocks wd =
         -- errorToString err
         --     |> viewError description path method
         Success blocks ->
-            blocks
-                |> List.map (\b -> span [] [ text b.hash ])
-                |> div []
+            viewBlocksSuccess blocks
+
+
+viewBlocksSuccess : List Block -> Html Msg
+viewBlocksSuccess blocks =
+    div []
+        [ blocks
+            |> List.map (\b -> span [] [ text b.hash ])
+            |> div []
+        , node "bar-simple" [] []
+        ]
 
 
 viewResponses : Model -> Html msg
