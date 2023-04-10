@@ -18,5 +18,6 @@ yes | npx elm-test init
 rm tests/Example.elm
 yes | npx elm install elm/time
 yes | npx elm install rtfeldman/elm-iso8601-date-strings
+npm install --save @carbon/charts d3
 # ~\~ end
 # ~\~ end
