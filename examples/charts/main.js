@@ -7,6 +7,7 @@ import "@carbon/styles/css/styles.css";
 
 import { BarSimple } from "./src/bar-simple";
 
+
 customElements.define("bar-simple", BarSimple);
 
 const key = import.meta.env.VITE_STREAMCARDANO_KEY;

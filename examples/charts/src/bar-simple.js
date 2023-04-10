@@ -1,27 +1,31 @@
 import chartStyles from "@carbon/charts/styles.css";
 import { StackedBarChart } from "@carbon/charts";
 
+
+
 export class BarSimple extends HTMLElement {
   constructor() {
-    // Always call super first in constructor
     super();
+    this._chart = null
+    this._data = null
+  }
 
+  connectedCallback () {
+    // first  check if the property is set
+    let data = this._data
+    let title = this.getAttribute('title')
+    this.createChart(title, data)
+  }
 
-    const stackedBarData = [
-      { group: 'Qty', value: 65000 },
-      { group: 'More', value: 29123 },
-      { group: 'Sold', value: 35213 },
-      { group: 'Restocking', value: 51213 },
-      { group: 'Misc', value: 16932 },
-
-    ];
-
+  createChart (title, data) {
+    const stackedBarData = []
     const stackedBarOptions = {
-      title: 'Vertical simple bar (discrete)',
+      title: title, 
       axes: {
 	left: {
 	  mapsTo: 'value',
 	},
+        toolbar: { enabled: false},
 	bottom: {
 	  mapsTo: 'group',
 	  scaleType: 'labels',
@@ -30,20 +34,28 @@ export class BarSimple extends HTMLElement {
 
     };
 
-    // write element functionality in here
     this.attachShadow({ mode: "open" });
     const wrapper = document.createElement("div");
-
 
     const style = document.createElement("style");
     style.textContent = chartStyles
 
-    new StackedBarChart(wrapper, {
-      data: stackedBarData,
+    this._chart = new StackedBarChart(wrapper, {
+      data: data,
       options: stackedBarOptions,
     });
 
-   this.shadowRoot.append(style, wrapper);
-  }
-}
+    this.shadowRoot.append(style, wrapper);
 
+  }
+  
+  set chartData (newValue) {
+    this._data = newValue
+  }
+
+  get chartData () {
+    return this._data
+  }
+
+  disconnectCallback () {}
+}

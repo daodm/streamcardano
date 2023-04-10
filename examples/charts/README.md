@@ -97,6 +97,7 @@ import "@carbon/styles/css/styles.css";
 
 import { BarSimple } from "./src/bar-simple";
 
+
 customElements.define("bar-simple", BarSimple);
 
 const key = import.meta.env.VITE_STREAMCARDANO_KEY;
@@ -252,7 +253,7 @@ init flags =
     , --Api.getStatus GotStatus credentials
       Api.postQuery GotBlocks
         credentials
-        "SELECT * FROM block LIMIT 10"
+        "SELECT * FROM block LIMIT 7"
     )
 
 
@@ -541,16 +542,38 @@ viewBlocks wd =
         -- errorToString err
         --     |> viewError description path method
         Success blocks ->
-            viewBlocksSuccess blocks
+            blocks
+                |> E.list fn
+                |> viewBlocksSuccess
 
 
-viewBlocksSuccess : List Block -> Html Msg
+fn b =
+    E.object [ ( "group", E.string <| String.fromInt b.blockNo ), ( "value", E.int b.size ) ]
+
+
+
+-- const stackedBarData = [ b
+--       { group: 'Qty', value: 65000 },
+--       { group: 'More', value: 29123 },
+--       { group: 'Sold', value: 35213 },
+--       { group: 'Restocking', value: 51213 },
+--       { group: 'Misc', value: 16932 },
+--     ];
+
+
 viewBlocksSuccess blocks =
-    div []
-        [ blocks
-            |> List.map (\b -> span [] [ text b.hash ])
-            |> div []
-        , node "bar-simple" [] []
+    div [ class "cds--grid" ]
+        [ div [ class "cds--row" ]
+            [ div [ class "cds--col-sm-2 " ]
+                [ node "bar-simple"
+                    [ attribute "title" "The number of transactions per block"
+                    , property "chartData" blocks
+                    ]
+                    []
+                ]
+            , div [ class "cds--col-sm-1" ]
+                []
+            ]
         ]
 
 
