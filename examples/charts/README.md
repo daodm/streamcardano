@@ -78,6 +78,7 @@ rm tests/Example.elm
 yes | npx elm install elm/time
 yes | npx elm install rtfeldman/elm-iso8601-date-strings
 npm install --save @carbon/charts d3
+yes | elm install klazuka/elm-json-tree-view
 ```
 
 Add elm-stuff and elm-repl generated files to .gitignore.
@@ -133,13 +134,14 @@ port module Main exposing (main)
 -}
 
 import Browser exposing (Document)
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Http as Http exposing (Error)
 import Json.Decode as D
 import Json.Encode as E
-import JsonTree
+import JsonTree exposing (TaggedValue(..))
 import RemoteData exposing (RemoteData(..), WebData)
 import StreamCardano.Api as Api
 import StreamCardano.Data.LastBlock as LastBlock exposing (LastBlock)
@@ -181,6 +183,7 @@ type alias Model =
     , transactions : WebData Transactions
     , blocks : WebData (List Block)
     , jsonState : JsonTree.State
+    , activeSwitcher : Switcher
 
     --
     , lastBlock : WebData LastBlock
@@ -201,6 +204,12 @@ type Tab
     | Query
     | Transactions
     | Blocks
+
+
+type Switcher
+    = All
+    | Table
+    | Tree
 
 
 allTabs : List Tab
@@ -224,6 +233,24 @@ tabToStr tab =
             "Blocks"
 
 
+allSwitcher : List Switcher
+allSwitcher =
+    [ All, Table, Tree ]
+
+
+switcherToStr : Switcher -> String
+switcherToStr switcher =
+    case switcher of
+        All ->
+            "All"
+
+        Table ->
+            "Table"
+
+        Tree ->
+            "Tree"
+
+
 {-| StreamCardano host and key values are passed into Elm via Flags.
 -}
 type alias Flags =
@@ -241,24 +268,24 @@ init flags =
             Api.credentials flags
     in
     ( { credentials = credentials
-      , activeTab = Query --Dashboard
-      , query = "SELECT * FROM block LIMIT 3"
+      , activeTab = Dashboard
+      , query = "SELECT * FROM tx LIMIT 7"
       , isQueryDebugMode = False
       , status = Loading
       , sqlQuery = NotAsked
       , transactions = Loading
       , blocks = Loading
       , jsonState = JsonTree.defaultState
+      , activeSwitcher = All
 
       --
       , lastBlock = NotAsked
       , newBlocks = NotAsked
       }
-    , --Api.getStatus GotStatus credentials
-      postQuery False
-        PostedQuery
-        credentials
-        "SELECT * FROM block LIMIT 3"
+    , Cmd.batch
+        [ Api.getStatus GotStatus credentials
+        , Api.postQuery GotBlocks credentials "SELECT * FROM block LIMIT 7"
+        ]
     )
 
 
@@ -269,6 +296,7 @@ type Msg
     | GotTransactions (Result Error Query)
     | GotBlocks (Result Error Query)
     | SetTreeViewState JsonTree.State
+    | ChangedSwitcher Switcher
       --
     | GetLastBlock
     | GotLastBlock (Result Error LastBlock)
@@ -296,6 +324,11 @@ update msg model =
 
                 _ ->
                     Cmd.none
+            )
+
+        ChangedSwitcher switcher ->
+            ( { model | activeSwitcher = switcher }
+            , Cmd.none
             )
 
         ToggledDebugMode ->
@@ -410,46 +443,52 @@ viewNav model =
     header [ class "cds--header", attribute "data-carbon-theme" "g100" ]
         [ a [ class "cds--header__name" ] [ text "Stream Cardano Charts" ]
         , nav [ class "cds--header__menu-bar" ]
-            [ viewGetLastBlockButton
-            , viewListenNewBlockButton
+            [ viewDocsButton
             ]
         ]
 
 
-viewGetLastBlockButton : Html Msg
-viewGetLastBlockButton =
-    a [ class "cds--header__menu-item", onClick GetLastBlock ] [ text "Get Last Block" ]
-
-
-viewListenNewBlockButton : Html Msg
-viewListenNewBlockButton =
-    a [ class "cds--header__menu-item", onClick ListenNewBlocks ] [ text "Listen to New Blocks" ]
+viewDocsButton : Html Msg
+viewDocsButton =
+    a [ class "cds--header__menu-item", href "https://docs-beta.streamcardano.dev" ] [ text "DOCS" ]
 
 
 viewRunQueryForm : Bool -> String -> Html Msg
 viewRunQueryForm isDebugMode query =
-    div [ class "cds--form" ]
-        [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
-            [ div [ class "cds--form-item" ]
-                [ div [ class "cds--toggle", onClick ToggledDebugMode ]
-                    [ div [ class "cds--toogle_label" ]
-                        [ span [ class "cds--toggle__label-text" ]
-                            [ text "Debug mode"
+    div [ class "cds--grid" ]
+        [ div [ class "cds--row" ]
+            [ div [ class "cds--col-sm-3 cds--col-lg-7" ]
+                [ div [ class "cds--form" ]
+                    [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
+                        [ div [ class "cds--form-item" ]
+                            [ div [ class "cds--text-area__label-wrapper" ]
+                                [ div [ class "cds--label" ] [ text "Query" ] ]
+                            , div [ class "cds--text-area__wrapper" ]
+                                [ textarea [ class "cds--text-area", attribute "cols" "75", attribute "rows" "3", onInput ChangeQuery, value query ] [] ]
                             ]
-                        , div [ class "cds--toggle__appearance" ]
-                            [ div [ classList [ ( "cds--toggle__switch", True ), ( "cds--toggle__switch--checked", isDebugMode ) ] ] []
-                            , div [ class "cds-toggle__text" ] []
-                            ]
+                        , button [ class "cds--btn cds--btn--primary", onClick RunQuery ] [ text "Submit" ]
                         ]
                     ]
                 ]
-            , div [ class "cds--form-item" ]
-                [ div [ class "cds--text-area__label-wrapper" ]
-                    [ div [ class "cds--label" ] [ text "Query" ] ]
-                , div [ class "cds--text-area__wrapper" ]
-                    [ textarea [ class "cds--text-area", attribute "cols" "75", attribute "rows" "3", onInput ChangeQuery, value query ] [] ]
+            , div [ class "cds--col-sm-1" ]
+                [ viewDebugMode isDebugMode ]
+            ]
+        ]
+
+
+viewDebugMode : Bool -> Html Msg
+viewDebugMode isDebugMode =
+    div [ class "cds--form-item" ]
+        [ div [ class "cds--toggle", onClick ToggledDebugMode ]
+            [ div [ class "cds--toogle_label" ]
+                [ span [ class "cds--toggle__label-text" ]
+                    [ text "Debug mode"
+                    ]
+                , div [ class "cds--toggle__appearance" ]
+                    [ div [ classList [ ( "cds--toggle__switch", True ), ( "cds--toggle__switch--checked", isDebugMode ) ] ] []
+                    , div [ class "cds-toggle__text" ] []
+                    ]
                 ]
-            , button [ class "cds--btn cds--btn--primary", onClick RunQuery ] [ text "Submit" ]
             ]
         ]
 
@@ -481,10 +520,8 @@ viewMain model =
                     ]
                 ]
             ]
-        , div [ class "body" ]
-            [ div [ class "cds--grid" ]
-                [ viewBody model ]
-            ]
+        , div [ id "body" ]
+            [ viewBody model ]
         ]
 
 
@@ -504,14 +541,16 @@ viewBody : Model -> Html Msg
 viewBody model =
     case model.activeTab of
         Dashboard ->
-            viewResponses model
+            div []
+                [ viewBlocks model.blocks
+                , viewRunQueryForm model.isQueryDebugMode model.query
+                , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
+                ]
 
         Query ->
             div []
-                [ div [ class "cds--row" ]
-                    [ div [ class "cds--col" ] [ viewRunQueryForm model.isQueryDebugMode model.query ]
-                    ]
-                , viewPostedQuery model.jsonState model.sqlQuery
+                [ viewRunQueryForm model.isQueryDebugMode model.query
+                , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
                 ]
 
         Transactions ->
@@ -576,27 +615,29 @@ areaEncode b =
 
 viewBlocksSuccess : List BlockNo -> Html msg
 viewBlocksSuccess blocks =
-    div [ class "cds--row charts-demo" ]
-        [ div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
-            [ div [ class "chart-demo" ]
-                [ node "bar-simple"
-                    [ attribute "title" "The number of transactions per block"
-                    , blocks
-                        |> E.list barEncode
-                        |> property "chartData"
+    div [ class "cds--grid" ]
+        [ div [ class "cds--row charts-demo" ]
+            [ div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
+                [ div [ class "chart-demo" ]
+                    [ node "bar-simple"
+                        [ attribute "title" "The number of transactions per block"
+                        , blocks
+                            |> E.list barEncode
+                            |> property "chartData"
+                        ]
+                        []
                     ]
-                    []
                 ]
-            ]
-        , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
-            [ div [ class "chart-demo" ]
-                [ node "area-bounded"
-                    [ attribute "title" "The number of transactions per block"
-                    , blocks
-                        |> E.list areaEncode
-                        |> property "chartData"
+            , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
+                [ div [ class "chart-demo" ]
+                    [ node "area-bounded"
+                        [ attribute "title" "The number of transactions per block"
+                        , blocks
+                            |> E.list areaEncode
+                            |> property "chartData"
+                        ]
+                        []
                     ]
-                    []
                 ]
             ]
         ]
@@ -634,8 +675,8 @@ viewLastBlock lastBlock =
         lastBlock
 
 
-viewPostedQuery : JsonTree.State -> WebData Query -> Html Msg
-viewPostedQuery tree rd =
+viewPostedQuery : Switcher -> JsonTree.State -> WebData Query -> Html Msg
+viewPostedQuery activeSwitcher tree rd =
     case rd of
         NotAsked ->
             viewNotAsked
@@ -647,31 +688,62 @@ viewPostedQuery tree rd =
             viewGeneralError
 
         Success query ->
-            viewPostedQuerySuccess tree query
+            viewPostedQuerySuccess activeSwitcher tree query
 
 
-viewPostedQuerySuccess : JsonTree.State -> Query -> Html Msg
-viewPostedQuerySuccess treeState query =
+viewPostedQuerySuccess : Switcher -> JsonTree.State -> Query -> Html Msg
+viewPostedQuerySuccess activeSwitcher treeState query =
     let
         encoded =
-            Query.encode query
+            E.list Query.encodedQueryResultItem query.result
     in
     div [ class "response" ]
-        [ div [ class "cds--row switcher" ]
-            [ div [ class "cds--col-sm-1" ] [ text "menu" ] ]
-        , div [ class "cds--row" ]
-            [ div [ class "cds--col-sm-1" ] [ viewJSONRaw encoded ]
-
-            -- , div [ class "cds--col-sm-1" ] [ viewJSONTable encoded ]
-            , div [ class "cds--col-sm-1" ] [ viewJSONTree treeState encoded ]
+        [ div [ class "cds--grid" ]
+            [ div [ class "cds--row" ]
+                [ div [ class "cds--col-sm-2 cds--col-lg-4 " ]
+                    [ div [ class "cds--content-switcher cds--content-switcher--sm" ]
+                        (List.map (viewSwitcher ((==) activeSwitcher)) allSwitcher)
+                    ]
+                ]
             ]
+        , div [ class "cds--row panels" ]
+            (div [ class "cds--col-sm-4 cds--col-lg-4" ] [ viewJSONRaw encoded ]
+                :: (case activeSwitcher of
+                        All ->
+                            [ div [ class "cds--col-sm-4 cds--col-lg-6" ]
+                                [ viewJSONTable encoded ]
+                            , div
+                                [ class "cds--col-sm-4 cds--col-lg-6" ]
+                                [ viewJSONTree treeState encoded ]
+                            ]
+
+                        Table ->
+                            [ div [ class "cds--col-sm-4 cds--col-lg-12" ] [ viewJSONTable encoded ] ]
+
+                        Tree ->
+                            [ div [ class "cds--col-sm-4 cds--col-lg-12" ] [ viewJSONTree treeState encoded ] ]
+                   )
+            )
+        ]
+
+
+viewSwitcher : (Switcher -> Bool) -> Switcher -> Html Msg
+viewSwitcher isSelected switcher =
+    button
+        [ classList [ ( "cds--content-switcher-btn", True ), ( "cds--content-switcher--selected", isSelected switcher ) ]
+        , onClick (ChangedSwitcher switcher)
+        ]
+        [ span
+            [ class "cds--content-switcher__label"
+            ]
+            [ text (switcherToStr switcher) ]
         ]
 
 
 viewJSONRaw : E.Value -> Html msg
 viewJSONRaw value =
-    div [ class "cds--snippet" ]
-        [ code []
+    div [ class "cds--snippet cds--snippet--multi cds--snippet--has-right-overflow" ]
+        [ div [ class "cds--snippet-container" ]
             [ pre []
                 [ value
                     |> E.encode 4
@@ -683,21 +755,149 @@ viewJSONRaw value =
 
 viewJSONTable : E.Value -> Html msg
 viewJSONTable value =
-    div [ class "cds--snippet" ]
-        [ code []
-            [ pre []
-                [ value
-                    |> E.encode 4
-                    |> text
-                ]
-            ]
-        ]
+    let
+        x : Result D.Error JsonTree.Node
+        x =
+            JsonTree.parseValue value
+    in
+    case x of
+        Err e ->
+            text "error"
+
+        Ok v ->
+            div []
+                (viewNodeInternal 0 v)
+
+
+viewNodeInternal : Int -> JsonTree.Node -> List (Html msg)
+viewNodeInternal depth node =
+    case node.value of
+        TString str ->
+            viewScalar str
+
+        TBool True ->
+            viewScalar "true"
+
+        TBool False ->
+            viewScalar "false"
+
+        TFloat x ->
+            viewScalar (String.fromFloat x)
+
+        TNull ->
+            viewScalar "NULL"
+
+        TList nodes ->
+            viewList depth nodes
+
+        TDict dict ->
+            viewDict depth dict
+
+
+viewTheadItem : Int -> JsonTree.Node -> List (Html msg)
+viewTheadItem depth node =
+    case node.value of
+        TString str ->
+            viewScalar str
+
+        TBool True ->
+            viewScalar "true"
+
+        TBool False ->
+            viewScalar "false"
+
+        TFloat x ->
+            viewScalar (String.fromFloat x)
+
+        TNull ->
+            viewScalar "NULL"
+
+        TList nodes ->
+            viewList depth nodes
+
+        TDict dict ->
+            viewDictHead depth dict
+
+
+viewScalar : String -> List (Html msg)
+viewScalar str =
+    [ text str ]
+
+
+viewList : Int -> List JsonTree.Node -> List (Html msg)
+viewList depth nodes =
+    let
+        innerContent =
+            case nodes of
+                [] ->
+                    []
+
+                n1 :: ns ->
+                    [ div [ class "cds--data-table-header" ]
+                        [ div [ class "cds--data-table-content" ]
+                            [ table [ class "cds--data-table" ]
+                                [ thead [] (viewTheadItem (depth + 1) n1)
+                                , tbody []
+                                    (viewNodeInternal (depth + 1) n1
+                                        ++ List.concatMap (viewNodeInternal (depth + 1)) ns
+                                    )
+                                ]
+                            ]
+                        ]
+                    ]
+    in
+    innerContent
+
+
+viewDictHead : Int -> Dict String JsonTree.Node -> List (Html msg)
+viewDictHead depth dict =
+    let
+        viewListItem ( fieldName, node ) =
+            th [] [ span [] [ text fieldName ] ]
+    in
+    List.map viewListItem (Dict.toList dict)
+
+
+viewDict : Int -> Dict String JsonTree.Node -> List (Html msg)
+viewDict depth dict =
+    let
+        viewListItem ( fieldName, node ) =
+            td [] (viewNodeInternal (depth + 1) node)
+    in
+    [ tr []
+        (List.map viewListItem (Dict.toList dict))
+    ]
+
+
+
+-- viewDict : Int -> Dict String JsonTree.Node -> List (Html msg)
+-- viewDict depth dict =
+--     let
+--         innerContent =
+--             if Dict.isEmpty dict then
+--                 []
+--             else
+--                 [ ul
+--                     []
+--                     (List.map viewListItem (Dict.toList dict))
+--                 ]
+--         viewListItem ( fieldName, node ) =
+--             li
+--                 []
+--                 ([ span [] [ text fieldName ]
+--                  , text ": "
+--                  ]
+--                     ++ viewNodeInternal (depth + 1) node
+--                     ++ [ text "," ]
+--                 )
+--     in
+--     [ text "{" ] ++ innerContent ++ [ text "}" ]
 
 
 viewJSONTree : JsonTree.State -> E.Value -> Html Msg
 viewJSONTree state value =
-    div [ class "cds--snippet" ]
-        [ code []
+    div [ class "cds--snippet cds--snippet--multi cds--snippet--has-right-overflow" ]
+        [ div [ class "cds--snippet-container" ]
             [ pre []
                 [ JsonTree.parseValue value
                     |> Result.map (\tree -> JsonTree.view tree config state)

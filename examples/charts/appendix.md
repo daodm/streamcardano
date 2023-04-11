@@ -119,10 +119,18 @@
        margin-bottom: 4rem;
 }
 .response {
-       margin-top: 4rem;
+           margin: 1rem;
+
+
 }
 .switcher {
     margin-bottom: 2rem;
+}
+thead {
+  text-transform: uppercase;
+}
+textarea {
+    width: 100%;
 }
 ```
 
