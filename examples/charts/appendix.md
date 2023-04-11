@@ -111,6 +111,13 @@
         padding-top: 2rem;
     }
 }
+
+.charts-demo {
+}
+
+.chart-demo {
+       margin-bottom: 4rem;
+}
 ```
 
 # Ports

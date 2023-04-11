@@ -418,37 +418,51 @@ viewBlocks wd =
         -- errorToString err
         --     |> viewError description path method
         Success blocks ->
-            blocks
-                |> E.list fn
-                |> viewBlocksSuccess
+            viewBlocksSuccess blocks
 
 
-fn b =
-    E.object [ ( "group", E.string <| String.fromInt b.blockNo ), ( "value", E.int b.size ) ]
+barEncode : Block -> E.Value
+barEncode b =
+    E.object
+        [ ( "group", E.string <| String.fromInt b.blockNo )
+        , ( "date", E.string b.time )
+        , ( "value", E.int b.txCount )
+        ]
 
 
+areaEncode : Block -> E.Value
+areaEncode b =
+    E.object
+        [ ( "group", E.string "Blocks" )
+        , ( "date", E.string b.time )
+        , ( "value", E.int b.txCount )
+        ]
 
--- const stackedBarData = [ b
---       { group: 'Qty', value: 65000 },
---       { group: 'More', value: 29123 },
---       { group: 'Sold', value: 35213 },
---       { group: 'Restocking', value: 51213 },
---       { group: 'Misc', value: 16932 },
---     ];
 
-
+viewBlocksSuccess : List BlockNo -> Html msg
 viewBlocksSuccess blocks =
-    div [ class "cds--grid" ]
-        [ div [ class "cds--row" ]
-            [ div [ class "cds--col-sm-2 " ]
+    div [ class "cds--row charts-demo" ]
+        [ div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
+            [ div [ class "chart-demo" ]
                 [ node "bar-simple"
                     [ attribute "title" "The number of transactions per block"
-                    , property "chartData" blocks
+                    , blocks
+                        |> E.list barEncode
+                        |> property "chartData"
                     ]
                     []
                 ]
-            , div [ class "cds--col-sm-1" ]
-                []
+            ]
+        , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
+            [ div [ class "chart-demo" ]
+                [ node "area-bounded"
+                    [ attribute "title" "The number of transactions per block"
+                    , blocks
+                        |> E.list areaEncode
+                        |> property "chartData"
+                    ]
+                    []
+                ]
             ]
         ]
 

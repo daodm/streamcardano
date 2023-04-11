@@ -5,10 +5,11 @@ import styles from "./src/main.scss";
 import { setupPorts } from "./src/ports";
 import "@carbon/styles/css/styles.css";
 
-import { BarSimple } from "./src/bar-simple";
+import { BarSimple, AreaBounded } from "./src/bar-simple";
 
 
 customElements.define("bar-simple", BarSimple);
+customElements.define("area-bounded", AreaBounded);
 
 const key = import.meta.env.VITE_STREAMCARDANO_KEY;
 const host = import.meta.env.VITE_STREAMCARDANO_HOST;
