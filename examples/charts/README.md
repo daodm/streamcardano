@@ -139,6 +139,7 @@ import Html.Events exposing (onClick, onInput)
 import Http as Http exposing (Error)
 import Json.Decode as D
 import Json.Encode as E
+import JsonTree
 import RemoteData exposing (RemoteData(..), WebData)
 import StreamCardano.Api as Api
 import StreamCardano.Data.LastBlock as LastBlock exposing (LastBlock)
@@ -179,6 +180,7 @@ type alias Model =
     , sqlQuery : WebData Query
     , transactions : WebData Transactions
     , blocks : WebData (List Block)
+    , jsonState : JsonTree.State
 
     --
     , lastBlock : WebData LastBlock
@@ -246,6 +248,7 @@ init flags =
       , sqlQuery = NotAsked
       , transactions = Loading
       , blocks = Loading
+      , jsonState = JsonTree.defaultState
 
       --
       , lastBlock = NotAsked
@@ -265,6 +268,7 @@ type Msg
     | ToggledDebugMode
     | GotTransactions (Result Error Query)
     | GotBlocks (Result Error Query)
+    | SetTreeViewState JsonTree.State
       --
     | GetLastBlock
     | GotLastBlock (Result Error LastBlock)
@@ -321,6 +325,9 @@ update msg model =
 
         GotBlocks (Err err) ->
             ( { model | blocks = Failure err }, Cmd.none )
+
+        SetTreeViewState state ->
+            ( { model | jsonState = state }, Cmd.none )
 
         GetLastBlock ->
             ( { model | lastBlock = Loading }
@@ -504,7 +511,7 @@ viewBody model =
                 [ div [ class "cds--row" ]
                     [ div [ class "cds--col" ] [ viewRunQueryForm model.isQueryDebugMode model.query ]
                     ]
-                , viewPostedQuery model.sqlQuery
+                , viewPostedQuery model.jsonState model.sqlQuery
                 ]
 
         Transactions ->
@@ -627,8 +634,8 @@ viewLastBlock lastBlock =
         lastBlock
 
 
-viewPostedQuery : WebData Query -> Html Msg
-viewPostedQuery rd =
+viewPostedQuery : JsonTree.State -> WebData Query -> Html Msg
+viewPostedQuery tree rd =
     case rd of
         NotAsked ->
             viewNotAsked
@@ -640,11 +647,11 @@ viewPostedQuery rd =
             viewGeneralError
 
         Success query ->
-            viewPostedQuerySuccess query
+            viewPostedQuerySuccess tree query
 
 
-viewPostedQuerySuccess : Query -> Html msg
-viewPostedQuerySuccess query =
+viewPostedQuerySuccess : JsonTree.State -> Query -> Html Msg
+viewPostedQuerySuccess treeState query =
     let
         encoded =
             Query.encode query
@@ -654,8 +661,9 @@ viewPostedQuerySuccess query =
             [ div [ class "cds--col-sm-1" ] [ text "menu" ] ]
         , div [ class "cds--row" ]
             [ div [ class "cds--col-sm-1" ] [ viewJSONRaw encoded ]
-            , div [ class "cds--col-sm-1" ] [ viewJSONTable encoded ]
-            , div [ class "cds--col-sm-1" ] [ viewJSONTree encoded ]
+
+            -- , div [ class "cds--col-sm-1" ] [ viewJSONTable encoded ]
+            , div [ class "cds--col-sm-1" ] [ viewJSONTree treeState encoded ]
             ]
         ]
 
@@ -686,17 +694,21 @@ viewJSONTable value =
         ]
 
 
-viewJSONTree : E.Value -> Html msg
-viewJSONTree value =
+viewJSONTree : JsonTree.State -> E.Value -> Html Msg
+viewJSONTree state value =
     div [ class "cds--snippet" ]
         [ code []
             [ pre []
-                [ value
-                    |> E.encode 4
-                    |> text
+                [ JsonTree.parseValue value
+                    |> Result.map (\tree -> JsonTree.view tree config state)
+                    |> Result.withDefault (text "Failed to parse JSON")
                 ]
             ]
         ]
+
+
+config =
+    { onSelect = Nothing, toMsg = SetTreeViewState, colors = JsonTree.defaultColors }
 
 
 viewStatus : WebData Status -> Html msg
