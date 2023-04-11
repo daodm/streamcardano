@@ -114,8 +114,8 @@ init flags =
             Api.credentials flags
     in
     ( { credentials = credentials
-      , activeTab = Blocks --Dashboard
-      , query = "SELECT tx_id, value FROM datum ORDER BY tx_id DESC LIMIT 1"
+      , activeTab = Query --Dashboard
+      , query = "SELECT * FROM block LIMIT 3"
       , isQueryDebugMode = False
       , status = Loading
       , sqlQuery = NotAsked
@@ -127,9 +127,10 @@ init flags =
       , newBlocks = NotAsked
       }
     , --Api.getStatus GotStatus credentials
-      Api.postQuery GotBlocks
+      postQuery False
+        PostedQuery
         credentials
-        "SELECT * FROM block LIMIT 7"
+        "SELECT * FROM block LIMIT 3"
     )
 
 
@@ -159,7 +160,14 @@ update msg model =
             ( { model | status = Failure err }, Cmd.none )
 
         ChangedTab tab ->
-            ( { model | activeTab = tab }, Cmd.none )
+            ( { model | activeTab = tab }
+            , case tab of
+                Blocks ->
+                    Api.postQuery GotBlocks model.credentials "SELECT * FROM block LIMIT 7"
+
+                _ ->
+                    Cmd.none
+            )
 
         ToggledDebugMode ->
             ( { model | isQueryDebugMode = not model.isQueryDebugMode }, Cmd.none )
@@ -343,12 +351,7 @@ viewMain model =
             ]
         , div [ class "body" ]
             [ div [ class "cds--grid" ]
-                [ div [ class "cds--row" ]
-                    [ div [ class "cds--col" ]
-                        [ viewBody model
-                        ]
-                    ]
-                ]
+                [ viewBody model ]
             ]
         ]
 
@@ -373,7 +376,9 @@ viewBody model =
 
         Query ->
             div []
-                [ viewRunQueryForm model.isQueryDebugMode model.query
+                [ div [ class "cds--row" ]
+                    [ div [ class "cds--col" ] [ viewRunQueryForm model.isQueryDebugMode model.query ]
+                    ]
                 , viewPostedQuery model.sqlQuery
                 ]
 
@@ -410,13 +415,11 @@ viewBlocks wd =
             viewNotAsked
 
         Loading ->
-            text ""
-
-        Failure err ->
             viewLoading
 
-        -- errorToString err
-        --     |> viewError description path method
+        Failure err ->
+            viewGeneralError
+
         Success blocks ->
             viewBlocksSuccess blocks
 
@@ -499,16 +502,76 @@ viewLastBlock lastBlock =
         lastBlock
 
 
-viewPostedQuery : WebData Query -> Html msg
-viewPostedQuery query =
-    viewRemoteData
-        { description = "Run a custom database query and retrieve its results."
-        , path = Endpoint.runQuery
-        , method = "POST"
-        , encode = Query.encode
-        , errorToString = httpErrorToString
-        }
-        query
+viewPostedQuery : WebData Query -> Html Msg
+viewPostedQuery rd =
+    case rd of
+        NotAsked ->
+            viewNotAsked
+
+        Loading ->
+            viewLoading
+
+        Failure err ->
+            viewGeneralError
+
+        Success query ->
+            viewPostedQuerySuccess query
+
+
+viewPostedQuerySuccess : Query -> Html msg
+viewPostedQuerySuccess query =
+    let
+        encoded =
+            Query.encode query
+    in
+    div [ class "response" ]
+        [ div [ class "cds--row switcher" ]
+            [ div [ class "cds--col-sm-1" ] [ text "menu" ] ]
+        , div [ class "cds--row" ]
+            [ div [ class "cds--col-sm-1" ] [ viewJSONRaw encoded ]
+            , div [ class "cds--col-sm-1" ] [ viewJSONTable encoded ]
+            , div [ class "cds--col-sm-1" ] [ viewJSONTree encoded ]
+            ]
+        ]
+
+
+viewJSONRaw : E.Value -> Html msg
+viewJSONRaw value =
+    div [ class "cds--snippet" ]
+        [ code []
+            [ pre []
+                [ value
+                    |> E.encode 4
+                    |> text
+                ]
+            ]
+        ]
+
+
+viewJSONTable : E.Value -> Html msg
+viewJSONTable value =
+    div [ class "cds--snippet" ]
+        [ code []
+            [ pre []
+                [ value
+                    |> E.encode 4
+                    |> text
+                ]
+            ]
+        ]
+
+
+viewJSONTree : E.Value -> Html msg
+viewJSONTree value =
+    div [ class "cds--snippet" ]
+        [ code []
+            [ pre []
+                [ value
+                    |> E.encode 4
+                    |> text
+                ]
+            ]
+        ]
 
 
 viewStatus : WebData Status -> Html msg
@@ -518,13 +581,11 @@ viewStatus rd =
             viewNotAsked
 
         Loading ->
-            text ""
-
-        Failure err ->
             viewLoading
 
-        -- errorToString err
-        --     |> viewError description path method
+        Failure err ->
+            viewGeneralError
+
         Success status ->
             div [ class "cds--toast-notification cds--toast-notification--success", title "" ]
                 [ div [ class "cds--toast-notification_details" ]
@@ -568,6 +629,11 @@ viewNotAsked =
 viewLoading : Html msg
 viewLoading =
     div [ class "loading" ] [ text "Loading..." ]
+
+
+viewGeneralError : Html msg
+viewGeneralError =
+    div [ class "error" ] [ text "Error..." ]
 
 
 viewSuccess : String -> String -> String -> E.Value -> Html msg

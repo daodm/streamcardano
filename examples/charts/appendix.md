@@ -118,6 +118,12 @@
 .chart-demo {
        margin-bottom: 4rem;
 }
+.response {
+       margin-top: 4rem;
+}
+.switcher {
+    margin-bottom: 2rem;
+}
 ```
 
 # Ports
