@@ -38,6 +38,8 @@
 @use '@carbon/styles/scss/components/button';
 @use '@carbon/styles/scss/components/stack';
 @use '@carbon/styles/scss/components/toggle';
+@use '@carbon/styles/scss/components/popover';
+@use '@carbon/styles/scss/components/modal';
 @use '@carbon/styles/scss/grid';
 @use '@carbon/styles/scss/layer';
 
@@ -88,6 +90,8 @@
         }
         .notification {
             padding-top: 2rem;
+            transition: visibility 0s linear 300ms, opacity 300ms;
+            opacity: 1;
         }
     }
 
@@ -112,16 +116,16 @@
     }
 }
 
-.charts-demo {
+.dashboard {
+  .charts-demo {
+      height: 400px;
+  }
 }
-
 .chart-demo {
        margin-bottom: 4rem;
 }
 .response {
-           margin: 1rem;
-
-
+           margin: 2rem;
 }
 .switcher {
     margin-bottom: 2rem;

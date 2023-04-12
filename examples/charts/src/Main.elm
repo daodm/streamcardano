@@ -77,7 +77,8 @@ type Tab
     = Dashboard
     | Query
     | Transactions
-    | Blocks
+      -- Or a way to choose a smart contract from a combo box, and see all transactions on this smart contract.
+    | Charts
 
 
 type Switcher
@@ -88,7 +89,7 @@ type Switcher
 
 allTabs : List Tab
 allTabs =
-    [ Dashboard, Query, Transactions, Blocks ]
+    [ Dashboard, Query, Transactions, Charts ]
 
 
 tabToStr : Tab -> String
@@ -103,8 +104,8 @@ tabToStr tab =
         Transactions ->
             "Transactions"
 
-        Blocks ->
-            "Blocks"
+        Charts ->
+            "Charts"
 
 
 allSwitcher : List Switcher
@@ -192,12 +193,7 @@ update msg model =
 
         ChangedTab tab ->
             ( { model | activeTab = tab }
-            , case tab of
-                Blocks ->
-                    Api.postQuery GotBlocks model.credentials "SELECT * FROM block LIMIT 7"
-
-                _ ->
-                    Cmd.none
+            , Cmd.none
             )
 
         ChangedSwitcher switcher ->
@@ -315,10 +311,8 @@ view model =
 viewNav : Model -> Html Msg
 viewNav model =
     header [ class "cds--header", attribute "data-carbon-theme" "g100" ]
-        [ a [ class "cds--header__name" ] [ text "Stream Cardano Charts" ]
-        , nav [ class "cds--header__menu-bar" ]
-            [ viewDocsButton
-            ]
+        [ a [ class "cds--header__name" ] [ text "Stream Cardano Dashboard" ]
+        , nav [ class "cds--header__menu-bar" ] []
         ]
 
 
@@ -377,8 +371,6 @@ viewMain model =
                         [ h1 [ class "title" ] [ text "UI Elements" ]
                         , h4 [ class "description" ] [ text "Streamlines Cardano dApp Development" ]
                         ]
-                    , div [ class "cds--col-sm-1", attribute "data-carbon-theme" "g90" ]
-                        [ div [ class "notification" ] [ viewStatus model.status ] ]
                     ]
                 ]
             ]
@@ -415,11 +407,7 @@ viewBody : Model -> Html Msg
 viewBody model =
     case model.activeTab of
         Dashboard ->
-            div []
-                [ viewBlocks model.blocks
-                , viewRunQueryForm model.isQueryDebugMode model.query
-                , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
-                ]
+            viewDashboard model
 
         Query ->
             div []
@@ -430,31 +418,52 @@ viewBody model =
         Transactions ->
             viewTransactions model.transactions
 
-        Blocks ->
-            viewBlocks model.blocks
+        Charts ->
+            viewCharts model.blocks
+
+
+viewDashboard : Model -> Html Msg
+viewDashboard model =
+    div [ class " dashboard" ]
+        [ div [ class "cds--grid" ]
+            [ div [ class "cds--row charts-demo" ]
+                [ div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-10" ]
+                    [ div [ class "chart-demo" ]
+                        [ model.blocks
+                            |> RemoteData.map viewBarSimple
+                            |> RemoteData.withDefault (text "loading")
+                        ]
+                    ]
+                , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-6" ]
+                    [ viewStatus model.status ]
+                ]
+            ]
+        , div []
+            [ viewRunQueryForm model.isQueryDebugMode model.query
+            , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
+            ]
+        ]
 
 
 viewTransactions : WebData Transactions -> Html Msg
 viewTransactions wd =
-    case Debug.log "wd: " wd of
+    case wd of
         NotAsked ->
             viewNotAsked
 
         Loading ->
-            text ""
-
-        Failure err ->
             viewLoading
 
-        -- errorToString err
-        --     |> viewError description path method
+        Failure err ->
+            viewGeneralError
+
         Success transactions ->
             div []
                 [ text "transactions" ]
 
 
-viewBlocks : WebData (List Block) -> Html Msg
-viewBlocks wd =
+viewCharts : WebData (List Block) -> Html Msg
+viewCharts wd =
     case wd of
         NotAsked ->
             viewNotAsked
@@ -466,7 +475,23 @@ viewBlocks wd =
             viewGeneralError
 
         Success blocks ->
-            viewBlocksSuccess blocks
+            viewChartsBlocks blocks
+
+
+viewChartsBlocks : List BlockNo -> Html msg
+viewChartsBlocks blocks =
+    div [ class "cds--grid" ]
+        [ div [ class "cds--row charts-demo" ]
+            [ div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
+                [ div [ class "chart-demo" ]
+                    [ viewBarSimple blocks ]
+                ]
+            , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
+                [ div [ class "chart-demo" ]
+                    [ viewAreaBounded blocks ]
+                ]
+            ]
+        ]
 
 
 barEncode : Block -> E.Value
@@ -478,6 +503,17 @@ barEncode b =
         ]
 
 
+viewBarSimple : List BlockNo -> Html msg
+viewBarSimple blocks =
+    node "bar-simple"
+        [ attribute "title" "The number of transactions per block"
+        , blocks
+            |> E.list barEncode
+            |> property "chartData"
+        ]
+        []
+
+
 areaEncode : Block -> E.Value
 areaEncode b =
     E.object
@@ -487,34 +523,15 @@ areaEncode b =
         ]
 
 
-viewBlocksSuccess : List BlockNo -> Html msg
-viewBlocksSuccess blocks =
-    div [ class "cds--grid" ]
-        [ div [ class "cds--row charts-demo" ]
-            [ div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
-                [ div [ class "chart-demo" ]
-                    [ node "bar-simple"
-                        [ attribute "title" "The number of transactions per block"
-                        , blocks
-                            |> E.list barEncode
-                            |> property "chartData"
-                        ]
-                        []
-                    ]
-                ]
-            , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-8" ]
-                [ div [ class "chart-demo" ]
-                    [ node "area-bounded"
-                        [ attribute "title" "The number of transactions per block"
-                        , blocks
-                            |> E.list areaEncode
-                            |> property "chartData"
-                        ]
-                        []
-                    ]
-                ]
-            ]
+viewAreaBounded : List Block -> Html msg
+viewAreaBounded blocks =
+    node "area-bounded"
+        [ attribute "title" "The number of transactions per block"
+        , blocks
+            |> E.list areaEncode
+            |> property "chartData"
         ]
+        []
 
 
 viewResponses : Model -> Html msg
@@ -550,7 +567,7 @@ viewLastBlock lastBlock =
 
 
 viewPostedQuery : Switcher -> JsonTree.State -> WebData Query -> Html Msg
-viewPostedQuery activeSwitcher tree rd =
+viewPostedQuery activeSwitcher jsonState rd =
     case rd of
         NotAsked ->
             viewNotAsked
@@ -562,7 +579,7 @@ viewPostedQuery activeSwitcher tree rd =
             viewGeneralError
 
         Success query ->
-            viewPostedQuerySuccess activeSwitcher tree query
+            viewPostedQuerySuccess activeSwitcher jsonState query
 
 
 viewPostedQuerySuccess : Switcher -> JsonTree.State -> Query -> Html Msg
@@ -572,7 +589,7 @@ viewPostedQuerySuccess activeSwitcher treeState query =
             E.list Query.encodedQueryResultItem query.result
     in
     div [ class "response" ]
-        [ div [ class "cds--grid" ]
+        [ div [ class "cds--grid switcher" ]
             [ div [ class "cds--row" ]
                 [ div [ class "cds--col-sm-2 cds--col-lg-4 " ]
                     [ div [ class "cds--content-switcher cds--content-switcher--sm" ]
