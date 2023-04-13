@@ -1,7 +1,7 @@
 -- ~\~ language=Elm filename=src/StreamCardano/Endpoint.elm
 
 
-module StreamCardano.Endpoint exposing (lastBlock, runQuery, status)
+module StreamCardano.Endpoint exposing (lastBlock, runQuery, runQueryDebug, status)
 
 
 status : String
@@ -16,4 +16,9 @@ lastBlock =
 
 runQuery : String
 runQuery =
+    "query"
+
+
+runQueryDebug : String
+runQueryDebug =
     "query"

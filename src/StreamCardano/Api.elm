@@ -1,11 +1,10 @@
 module StreamCardano.Api exposing
     ( Credentials, credentials
     , getStatus, getLastBlock
-    , postQuery
+    , postQuery, postQueryDebug
     )
 
 {-| Helpers for sending Http requests to the StreamCardano endpoints.
-
 
 @docs Credentials, credentials
 
@@ -17,7 +16,7 @@ module StreamCardano.Api exposing
 
 # Post Requests
 
-@docs postQuery
+@docs postQuery, postQueryDebug
 
 -}
 
@@ -27,12 +26,15 @@ import StreamCardano.Data.Query as Query exposing (Query)
 import StreamCardano.Data.Status as Status exposing (Status)
 import StreamCardano.Endpoint as Endpoint
 
-{-| StreamCardano API credentials -}
+
+{-| StreamCardano API credentials
+-}
 type Credentials
     = Credentials { url : String, key : String }
 
 
-{-| Init credentials -}
+{-| Init credentials
+-}
 credentials : { r | host : String, key : String } -> Credentials
 credentials { host, key } =
     Credentials
@@ -73,7 +75,19 @@ getLastBlock msg (Credentials { url, key }) =
 {-| Selecting data with a custom SQL query.
 -}
 postQuery : (Result Error Query -> msg) -> Credentials -> String -> Cmd msg
-postQuery msg (Credentials { url, key }) query =
+postQuery =
+    postQuery_ Endpoint.runQuery
+
+
+{-| Selecting data with a custom SQL query. **Use Debug endpoint**
+-}
+postQueryDebug : (Result Error Query -> msg) -> Credentials -> String -> Cmd msg
+postQueryDebug =
+    postQuery_ Endpoint.runQueryDebug
+
+
+postQuery_ : String -> (Result Error Query -> msg) -> Credentials -> String -> Cmd msg
+postQuery_ endpoint msg (Credentials { url, key }) query =
     let
         bearer =
             "Bearer " ++ key
@@ -81,7 +95,7 @@ postQuery msg (Credentials { url, key }) query =
     Http.request
         { method = "POST"
         , headers = [ Http.header "Authorization" bearer ]
-        , url = url ++ Endpoint.runQuery
+        , url = url ++ endpoint
         , body = Http.stringBody "text/plain;charset=utf-8" query
         , expect = Http.expectJson msg Query.decoder
         , timeout = Nothing

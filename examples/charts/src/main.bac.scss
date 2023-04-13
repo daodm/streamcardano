@@ -1,0 +1,27 @@
+/* ~\~ language=CSS filename=src/main.scss */
+/* ~\~ begin <<appendix.md|src/main.scss>>[init] */
+@use '@carbon/styles/scss/reset';
+@use '@carbon/styles/scss/type';
+@use '@carbon/styles/scss/themes';
+@use '@carbon/styles/scss/theme' with (
+  $theme: themes.$g90
+);
+@use '@carbon/styles/scss/components/menu-button';
+@use '@carbon/styles/scss/components/menu';
+@use '@carbon/styles/scss/components/ui-shell';
+@use '@carbon/styles/scss/components/notification';
+// @use '@carbon/styles';
+@use '@carbon/styles/scss/grid';
+
+// Emit the flex-grid styles
+@include grid.flex-grid();
+
+.container {
+    margin-left: 0;
+    margin-top: 4rem;
+    min-height: calc(100vh - 48px);
+    position: relative;
+    transition: .25s ease;
+    width: 100%;
+}
+/* ~\~ end */
