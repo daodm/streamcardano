@@ -202,8 +202,7 @@ type alias Block =
 type Tab
     = Dashboard
     | Query
-    | Transactions
-      -- Or a way to choose a smart contract from a combo box, and see all transactions on this smart contract.
+    | Contract
     | Charts
 
 
@@ -215,7 +214,7 @@ type Switcher
 
 allTabs : List Tab
 allTabs =
-    [ Dashboard, Query, Transactions, Charts ]
+    [ Dashboard, Query, Contract, Charts ]
 
 
 tabToStr : Tab -> String
@@ -227,8 +226,8 @@ tabToStr tab =
         Query ->
             "Query"
 
-        Transactions ->
-            "Transactions"
+        Contract ->
+            "Contract"
 
         Charts ->
             "Charts"
@@ -541,7 +540,7 @@ viewBody model =
                 , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
                 ]
 
-        Transactions ->
+        Contract ->
             viewTransactions model.transactions
 
         Charts ->
