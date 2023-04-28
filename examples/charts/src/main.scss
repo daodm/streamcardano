@@ -1,113 +1,113 @@
 /* ~\~ language=CSS filename=src/main.scss */
 /* ~\~ begin <<appendix.md|src/main.scss>>[init] */
-@use '@carbon/styles/scss/config' with (
-    $css--body: true 
+@use "@carbon/styles/scss/config" with (
+  $css--body: true
 );
-@use '@carbon/styles/scss/components/ui-shell';
-@use '@carbon/styles/scss/components/menu';
-@use '@carbon/styles/scss/components/notification';
-@use '@carbon/styles/scss/components/tabs';
-@use '@carbon/styles/scss/components/form';
-@use '@carbon/styles/scss/components/text-area';
-@use '@carbon/styles/scss/components/button';
-@use '@carbon/styles/scss/components/stack';
-@use '@carbon/styles/scss/components/toggle';
-@use '@carbon/styles/scss/components/popover';
-@use '@carbon/styles/scss/components/modal';
-@use '@carbon/styles/scss/grid';
-@use '@carbon/styles/scss/layer';
+@use "@carbon/styles/scss/components/ui-shell";
+@use "@carbon/styles/scss/components/menu";
+@use "@carbon/styles/scss/components/notification";
+@use "@carbon/styles/scss/components/tabs";
+@use "@carbon/styles/scss/components/form";
+@use "@carbon/styles/scss/components/text-area";
+@use "@carbon/styles/scss/components/button";
+@use "@carbon/styles/scss/components/stack";
+@use "@carbon/styles/scss/components/toggle";
+@use "@carbon/styles/scss/components/popover";
+@use "@carbon/styles/scss/components/modal";
+@use "@carbon/styles/scss/grid";
+@use "@carbon/styles/scss/layer";
 
-@use '@carbon/styles/scss/reset';
-@use '@carbon/styles/scss/type';
-@use '@carbon/themes/scss/themes' as *;
-@use '@carbon/themes';
+@use "@carbon/styles/scss/reset";
+@use "@carbon/styles/scss/type";
+@use "@carbon/themes/scss/themes" as *;
+@use "@carbon/themes";
 
 :root {
   @include themes.theme($g10);
 }
 
-[data-carbon-theme='g10'] {
+[data-carbon-theme="g10"] {
   @include themes.theme($g10);
 }
 
-[data-carbon-theme='g90'] {
+[data-carbon-theme="g90"] {
   @include themes.theme($g90);
 }
 
-[data-carbon-theme='g100'] {
+[data-carbon-theme="g100"] {
   @include themes.theme($g100);
 }
-
 
 // Emit the flex-grid styles
 @include grid.flex-grid();
 
 .cds--header {
-    border-bottom: 1px solid #393939;
+  border-bottom: 1px solid #393939;
 }
-.main{
-    margin-left: 0;
-    margin-top: 3rem;
-    min-height: calc(100vh - 48px);
-    position: relative;
-    transition: .25s ease;
+.main {
+  margin-left: 0;
+  margin-top: 3rem;
+  min-height: calc(100vh - 48px);
+  position: relative;
+  transition: 0.25s ease;
+  width: 100%;
+
+  .header {
+    background: #000;
+    color: #fff;
+    height: 20rem;
+    height: 16rem;
     width: 100%;
+    .title {
+      padding-top: 8rem;
+    }
+    .notification {
+      padding-top: 2rem;
+      transition: visibility 0s linear 300ms, opacity 300ms;
+      opacity: 1;
+    }
+  }
 
-    .header {
-        background: #000;
-        color: #fff;
-        height: 20rem;
-        height: 16rem;
-        width: 100%;
-        .title {
-            padding-top: 8rem;
-        }
-        .notification {
-            padding-top: 2rem;
-            transition: visibility 0s linear 300ms, opacity 300ms;
-            opacity: 1;
-        }
+  .tabs {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+
+    .cds--grid {
+      padding-right: 1rem;
+      padding-left: 1rem;
     }
 
-    .tabs {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-
-        .cds--grid {
-            padding-right: 1rem;
-            padding-left: 1rem;
-        }
-
-        .cds--tabs__nav-item:focus {
-            outline:none;
-        }
-        .cds--tabs__nav-item--selected {
-        }
+    .cds--tabs__nav-item:focus {
+      outline: none;
     }
-
-    .body {
-        padding-top: 2rem;
+    .cds--tabs__nav-item--selected {
     }
+  }
+
+  .body {
+    padding-top: 2rem;
+  }
 }
 
 .dashboard {
   .charts-demo {
-      height: 400px;
+    min-height: 400px;
+    margin-bottom: 2rem;
   }
 }
 .chart-demo {
-       margin-bottom: 4rem;
+  margin-bottom: 2rem;
 }
 .response {
-           margin: 2rem;
+  margin: 2rem;
 }
 .switcher {
-    margin-bottom: 2rem;
+  margin-bottom: 2rem;
 }
 thead {
   text-transform: uppercase;
 }
 textarea {
-    width: 100%;
+  width: 100%;
 }
 /* ~\~ end */

@@ -7,6 +7,7 @@ console.log(elmPlugin.plugin())
 
 export default defineConfig({
   plugins: [elmPlugin.plugin()],
+  base: '/streamcardano/',
   css: {
     preprocessorOptions: {
       scss: {

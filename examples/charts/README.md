@@ -44,6 +44,7 @@ console.log(elmPlugin.plugin())
 
 export default defineConfig({
   plugins: [elmPlugin.plugin()],
+  base: '/streamcardano/',
   css: {
     preprocessorOptions: {
       scss: {
@@ -180,7 +181,8 @@ type alias Model =
     , isQueryDebugMode : Bool
     , status : WebData Status
     , sqlQuery : WebData Query
-    , transactions : WebData Transactions
+    , contracts : WebData Contracts
+    , contractSearch : String
     , blocks : WebData (List Block)
     , jsonState : JsonTree.State
     , activeSwitcher : Switcher
@@ -191,7 +193,7 @@ type alias Model =
     }
 
 
-type alias Transactions =
+type alias Contracts =
     Query
 
 
@@ -273,7 +275,8 @@ init flags =
       , isQueryDebugMode = False
       , status = Loading
       , sqlQuery = NotAsked
-      , transactions = Loading
+      , contracts = Loading
+      , contractSearch = "addr1zxn9efv2f6w82hagxqtn62ju4m293tqvw0uhmdl64ch8uw6j2c79gy9l76sdg0xwhd7r0c0kna0tycz4y5s6mlenh8pq6s3z70"
       , blocks = Loading
       , jsonState = JsonTree.defaultState
       , activeSwitcher = All
@@ -293,10 +296,11 @@ type Msg
     = GotStatus (Result Error Status)
     | ChangedTab Tab
     | ToggledDebugMode
-    | GotTransactions (Result Error Query)
+    | GotContracts (Result Error Query)
     | GotBlocks (Result Error Query)
     | SetTreeViewState JsonTree.State
     | ChangedSwitcher Switcher
+    | RunSearchContract
       --
     | GetLastBlock
     | GotLastBlock (Result Error LastBlock)
@@ -329,11 +333,19 @@ update msg model =
         ToggledDebugMode ->
             ( { model | isQueryDebugMode = not model.isQueryDebugMode }, Cmd.none )
 
-        GotTransactions (Ok query) ->
-            ( { model | transactions = Success query }, Cmd.none )
+        RunSearchContract ->
+            ( { model | sqlQuery = Loading }
+            , postQuery model.isQueryDebugMode
+                GotContracts
+                model.credentials
+                model.query
+            )
 
-        GotTransactions (Err err) ->
-            ( { model | transactions = Failure err }, Cmd.none )
+        GotContracts (Ok query) ->
+            ( { model | contracts = Success query }, Cmd.none )
+
+        GotContracts (Err err) ->
+            ( { model | contracts = Failure err }, Cmd.none )
 
         GotBlocks (Ok query) ->
             let
@@ -427,14 +439,14 @@ view : Model -> Document Msg
 view model =
     { title = "StreamCardano"
     , body =
-        [ viewNav model
+        [ viewNav
         , viewMain model
         ]
     }
 
 
-viewNav : Model -> Html Msg
-viewNav model =
+viewNav : Html Msg
+viewNav =
     header [ class "cds--header", attribute "data-carbon-theme" "g100" ]
         [ a [ class "cds--header__name" ] [ text "Stream Cardano Dashboard" ]
         , nav [ class "cds--header__menu-bar" ] []
@@ -446,25 +458,29 @@ viewDocsButton =
     a [ class "cds--header__menu-item", href "https://docs-beta.streamcardano.dev" ] [ text "DOCS" ]
 
 
-viewRunQueryForm : Bool -> String -> Html Msg
-viewRunQueryForm isDebugMode query =
+viewRunQuery : Bool -> String -> Html Msg
+viewRunQuery isDebugMode query =
     div [ class "cds--grid" ]
         [ div [ class "cds--row" ]
             [ div [ class "cds--col-sm-3 cds--col-lg-7" ]
-                [ div [ class "cds--form" ]
-                    [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
-                        [ div [ class "cds--form-item" ]
-                            [ div [ class "cds--text-area__label-wrapper" ]
-                                [ div [ class "cds--label" ] [ text "Query" ] ]
-                            , div [ class "cds--text-area__wrapper" ]
-                                [ textarea [ class "cds--text-area", attribute "cols" "75", attribute "rows" "3", onInput ChangeQuery, value query ] [] ]
-                            ]
-                        , button [ class "cds--btn cds--btn--primary", onClick RunQuery ] [ text "Submit" ]
-                        ]
-                    ]
-                ]
+                [ viewRunQueryForm query ]
             , div [ class "cds--col-sm-1" ]
                 [ viewDebugMode isDebugMode ]
+            ]
+        ]
+
+
+viewRunQueryForm : String -> Html Msg
+viewRunQueryForm query =
+    div [ class "cds--form" ]
+        [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
+            [ div [ class "cds--form-item" ]
+                [ div [ class "cds--text-area__label-wrapper" ]
+                    [ div [ class "cds--label" ] [ text "Query" ] ]
+                , div [ class "cds--text-area__wrapper" ]
+                    [ textarea [ class "cds--text-area", attribute "cols" "75", attribute "rows" "3", onInput ChangeQuery, value query ] [] ]
+                ]
+            , button [ class "cds--btn cds--btn--primary", onClick RunQuery ] [ text "Submit" ]
             ]
         ]
 
@@ -536,12 +552,12 @@ viewBody model =
 
         Query ->
             div []
-                [ viewRunQueryForm model.isQueryDebugMode model.query
+                [ viewRunQuery model.isQueryDebugMode model.query
                 , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
                 ]
 
         Contract ->
-            viewTransactions model.transactions
+            viewContracts model
 
         Charts ->
             viewCharts model.blocks
@@ -562,16 +578,49 @@ viewDashboard model =
                 , div [ class "cds--col-sm-4 cds--col-lg-16 cds--col-xlg-6" ]
                     [ viewStatus model.status ]
                 ]
+            , div [ class "cds--row" ]
+                [ div [ class "cds--col-sm-3 cds--col-lg-7" ]
+                    [ viewRunQueryForm model.query ]
+                , div [ class "cds--col-sm-1" ]
+                    [ viewDebugMode model.isQueryDebugMode ]
+                ]
             ]
-        , div []
-            [ viewRunQueryForm model.isQueryDebugMode model.query
-            , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
+        , viewPostedQuery model.activeSwitcher model.jsonState model.sqlQuery
+        ]
+
+
+viewContracts : Model -> Html Msg
+viewContracts model =
+    div [ class "cds--grid" ]
+        [ div [ class "cds--row" ]
+            [ div [ class "cds--col-sm-3 cds--col-lg-14" ]
+                [ viewSearchContract model.isQueryDebugMode model.contractSearch ]
+            , div [ class "cds--col-sm-1 cds--col-lg-2" ]
+                [ viewDebugMode model.isQueryDebugMode ]
+            ]
+        , div [ class "cds--row" ]
+            [ div [ class "cds--col-sm-4" ] [ viewContractsResult model.contracts ]
             ]
         ]
 
 
-viewTransactions : WebData Transactions -> Html Msg
-viewTransactions wd =
+viewSearchContract : Bool -> String -> Html Msg
+viewSearchContract _ contractSearch =
+    div [ class "cds--form" ]
+        [ div [ class "cds--stack-vertical cds--stack-scale-7" ]
+            [ div [ class "cds--form-item" ]
+                [ div [ class "cds--text-input__label-wrapper" ]
+                    [ div [ class "cds--label" ] [ text "Search contract" ] ]
+                , div [ class "cds--text-input__field-wrapper" ]
+                    [ input [ class "cds--text-input", value contractSearch ] [] ]
+                ]
+            , button [ class "cds--btn cds--btn--primary", onClick RunSearchContract ] [ text "Search" ]
+            ]
+        ]
+
+
+viewContractsResult : WebData Contracts -> Html Msg
+viewContractsResult wd =
     case wd of
         NotAsked ->
             viewNotAsked
@@ -582,9 +631,14 @@ viewTransactions wd =
         Failure err ->
             viewGeneralError
 
-        Success transactions ->
-            div []
-                [ text "transactions" ]
+        Success contracts ->
+            viewContractsSuccess contracts
+
+
+viewContractsSuccess : Contracts -> Html Msg
+viewContractsSuccess _ =
+    div [ class "cds--col-sm-4" ]
+        [ text "contracts" ]
 
 
 viewCharts : WebData (List Block) -> Html Msg
@@ -631,7 +685,7 @@ barEncode b =
 viewBarSimple : List BlockNo -> Html msg
 viewBarSimple blocks =
     node "bar-simple"
-        [ attribute "title" "The number of transactions per block"
+        [ attribute "title" "The number of contracts per block"
         , blocks
             |> E.list barEncode
             |> property "chartData"
@@ -866,9 +920,9 @@ viewList depth nodes =
 
 
 viewDictHead : Int -> Dict String JsonTree.Node -> List (Html msg)
-viewDictHead depth dict =
+viewDictHead _ dict =
     let
-        viewListItem ( fieldName, node ) =
+        viewListItem ( fieldName, _ ) =
             th [] [ span [] [ text fieldName ] ]
     in
     List.map viewListItem (Dict.toList dict)
@@ -877,37 +931,12 @@ viewDictHead depth dict =
 viewDict : Int -> Dict String JsonTree.Node -> List (Html msg)
 viewDict depth dict =
     let
-        viewListItem ( fieldName, node ) =
+        viewListItem ( _, node ) =
             td [] (viewNodeInternal (depth + 1) node)
     in
     [ tr []
         (List.map viewListItem (Dict.toList dict))
     ]
-
-
-
--- viewDict : Int -> Dict String JsonTree.Node -> List (Html msg)
--- viewDict depth dict =
---     let
---         innerContent =
---             if Dict.isEmpty dict then
---                 []
---             else
---                 [ ul
---                     []
---                     (List.map viewListItem (Dict.toList dict))
---                 ]
---         viewListItem ( fieldName, node ) =
---             li
---                 []
---                 ([ span [] [ text fieldName ]
---                  , text ": "
---                  ]
---                     ++ viewNodeInternal (depth + 1) node
---                     ++ [ text "," ]
---                 )
---     in
---     [ text "{" ] ++ innerContent ++ [ text "}" ]
 
 
 viewJSONTree : JsonTree.State -> E.Value -> Html Msg
@@ -923,6 +952,7 @@ viewJSONTree state value =
         ]
 
 
+config : JsonTree.Config Msg
 config =
     { onSelect = Nothing, toMsg = SetTreeViewState, colors = JsonTree.defaultColors }
 
